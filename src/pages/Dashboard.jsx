@@ -4,20 +4,24 @@ import { useAuth } from '../context/AuthContext';
 import StatusBadge from '../components/StatusBadge';
 import '../styles/dashboard.css';
 
-const STATUS_FILTERS = ['All', 'Applied', 'Under Review', 'Shortlisted', 'Rejected'];
+const STATUS_FILTERS = ['All', 'Applied', 'Under Review', 'Shortlisted', 'Rejected', 'Selected'];
 
 // ── Application status timeline steps ──
 function getTimeline(status) {
+  const isRejected = status === 'Rejected';
+  const isSelected = status === 'Selected';
+
   const steps = [
     { key: 'Applied',      label: 'Application Submitted', sub: 'Your application is received' },
     { key: 'Under Review', label: 'Under Review',           sub: 'HR team is reviewing your profile' },
     { key: 'Shortlisted',  label: 'Shortlisted',            sub: 'You have been shortlisted!' },
-    { key: 'Rejected',     label: 'Decision Made',          sub: 'Application not selected this time' },
+    isSelected
+      ? { key: 'Selected',   label: 'Selected!',             sub: 'Congratulations! You have been selected for this position!' }
+      : { key: 'Rejected',   label: 'Decision Made',          sub: 'Application not selected this time' }
   ];
 
-  const order = { Applied: 0, 'Under Review': 1, Shortlisted: 2, Rejected: 2 };
+  const order = { Applied: 0, 'Under Review': 1, Shortlisted: 2, Rejected: 2, Selected: 3 };
   const currentIdx = order[status] ?? 0;
-  const isRejected = status === 'Rejected';
 
   return steps.slice(0, isRejected ? 2 : 4).map((s, i) => {
     const isReject = isRejected && i === 1;
@@ -94,6 +98,7 @@ export default function Dashboard() {
     review:      allApplications.filter(a => a.status === 'Under Review').length,
     shortlisted: allApplications.filter(a => a.status === 'Shortlisted').length,
     rejected:    allApplications.filter(a => a.status === 'Rejected').length,
+    selected:    allApplications.filter(a => a.status === 'Selected').length,
   }), [allApplications]);
 
   if (!user) {
@@ -164,6 +169,7 @@ export default function Dashboard() {
               { icon: '📋', iconCls: 'stat-icon-blue',   num: stats.total,       label: 'Total Applied' },
               { icon: '🔍', iconCls: 'stat-icon-yellow',  num: stats.review,      label: 'Under Review' },
               { icon: '⭐', iconCls: 'stat-icon-green',   num: stats.shortlisted, label: 'Shortlisted' },
+              { icon: '🎉', iconCls: 'stat-icon-purple',  num: stats.selected,    label: 'Selected' },
               { icon: '❌', iconCls: 'stat-icon-navy',    num: stats.rejected,    label: 'Not Selected' },
             ].map(s => (
               <div key={s.label} className="stat-card" aria-label={`${s.label}: ${s.num}`}>
@@ -335,6 +341,7 @@ export default function Dashboard() {
                     { label: 'Applied',      count: stats.total,       color: 'var(--status-applied)' },
                     { label: 'Under Review', count: stats.review,      color: 'var(--status-review)' },
                     { label: 'Shortlisted',  count: stats.shortlisted, color: 'var(--status-shortlisted)' },
+                    { label: 'Selected',     count: stats.selected,    color: 'var(--status-selected)' },
                     { label: 'Not Selected', count: stats.rejected,    color: 'var(--status-rejected)' },
                   ].map(s => (
                     <div key={s.label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'var(--space-3)' }}>
@@ -349,6 +356,7 @@ export default function Dashboard() {
                   {stats.total > 0 && (
                     <div style={{ marginTop:'var(--space-3)' }}>
                       <div style={{ height:6, background:'var(--color-border)', borderRadius:'var(--radius-full)', overflow:'hidden', display:'flex' }}>
+                        {stats.selected > 0    && <div style={{ width:`${(stats.selected/stats.total)*100}%`,       background:'var(--status-selected)', transition:'width 0.5s ease' }} />}
                         {stats.shortlisted > 0 && <div style={{ width:`${(stats.shortlisted/stats.total)*100}%`, background:'var(--color-success)', transition:'width 0.5s ease' }} />}
                         {stats.review > 0      && <div style={{ width:`${(stats.review/stats.total)*100}%`,      background:'var(--color-warning)' }} />}
                         {stats.rejected > 0    && <div style={{ width:`${(stats.rejected/stats.total)*100}%`,    background:'var(--color-error)' }} />}

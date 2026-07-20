@@ -76,7 +76,7 @@ export default async function handler(req, res) {
     // PATCH — update application status
     if (req.method === 'PATCH') {
       const { id, status } = req.body;
-      const validStatuses = ['Applied', 'Under Review', 'Shortlisted', 'Rejected'];
+      const validStatuses = ['Applied', 'Under Review', 'Shortlisted', 'Rejected', 'Selected'];
       if (!id || !validStatuses.includes(status)) return res.status(400).json({ error: 'Invalid id or status.' });
       if (!ObjectId.isValid(id)) return res.status(400).json({ error: 'Invalid application ID format.' });
       await apps.updateOne({ _id: new ObjectId(id) }, { $set: { status, updatedAt: new Date() } });

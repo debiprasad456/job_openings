@@ -47,6 +47,7 @@
   --status-review: #d69e2e;
   --status-shortlisted: #38a169;
   --status-rejected: #e53e3e;
+  --status-selected: #805ad5;
 
   /* Typography */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

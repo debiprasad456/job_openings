@@ -5,6 +5,7 @@ const STATUS_CONFIG = {
   'Under Review': { label: 'Under Review', icon: '🔍' },
   'Shortlisted':  { label: 'Shortlisted',  icon: '⭐' },
   'Rejected':     { label: 'Rejected',     icon: '❌' },
+  'Selected':     { label: 'Selected',     icon: '🎉' },
 };
 
 export default function StatusBadge({ status }) {

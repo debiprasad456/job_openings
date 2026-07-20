@@ -90,7 +90,7 @@
 /* ── Stats Row ── */
 .dashboard-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--space-5);
   margin-bottom: var(--space-8);
 }
@@ -128,6 +128,7 @@
 .stat-icon-yellow { background: var(--color-warning-bg); }
 .stat-icon-green  { background: var(--color-success-bg); }
 .stat-icon-navy   { background: var(--color-navy-subtle); }
+.stat-icon-purple { background: #faf5ff; }
 
 .stat-number {
   font-family: var(--font-heading);
@@ -225,6 +226,7 @@
 .application-card.status-Under-Review::before   { background: var(--status-review); }
 .application-card.status-Shortlisted::before    { background: var(--status-shortlisted); }
 .application-card.status-Rejected::before       { background: var(--status-rejected); }
+.application-card.status-Selected::before       { background: var(--status-selected); }
 
 .application-card:hover {
   border-color: var(--color-primary);
@@ -350,6 +352,12 @@
   color: var(--status-rejected);
 }
 .status-badge.Rejected::before { background: var(--status-rejected); }
+
+.status-badge.Selected {
+  background: #faf5ff;
+  color: var(--status-selected);
+}
+.status-badge.Selected::before { background: var(--status-selected); animation: pulse-dot 1.5s ease infinite; }
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
