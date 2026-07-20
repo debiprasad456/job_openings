@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import Apply from './pages/Apply';
 import Dashboard from './pages/Dashboard';
 import Admin from './pages/Admin';
+import ForgotPassword from './pages/ForgotPassword';
 import './styles/global.css';
 
 // ── Protected Route: must be logged in ──
@@ -50,6 +51,10 @@ function AppShell() {
 
         <Route path="/register" element={
           <GuestRoute><Register /></GuestRoute>
+        } />
+
+        <Route path="/forgot-password" element={
+          <GuestRoute><ForgotPassword /></GuestRoute>
         } />
 
         <Route path="/apply/:jobId" element={

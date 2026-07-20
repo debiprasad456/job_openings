@@ -147,7 +147,7 @@ export default function Login() {
               <div className="form-group" style={{ marginBottom: 'var(--space-3)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
                   <label className="form-label required" htmlFor="login-password" style={{ marginBottom: 0 }}>Password</label>
-                  <a href="#" className="forgot-link" tabIndex={-1}>Forgot password?</a>
+                  <Link to="/forgot-password" className="forgot-link" tabIndex={-1}>Forgot password?</Link>
                 </div>
                 <div className="password-field">
                   <input
