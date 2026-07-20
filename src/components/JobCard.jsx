@@ -24,11 +24,42 @@ const TYPE_BADGE = {
 
 export default function JobCard({ job }) {
   const { user } = useAuth();
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(() => {
+    try {
+      const savedIds = JSON.parse(localStorage.getItem('ds_saved_jobs') || '[]');
+      return savedIds.includes(job.id);
+    } catch {
+      return false;
+    }
+  });
+
+  // Listen to changes from other components (like Navbar)
+  React.useEffect(() => {
+    const handleSync = () => {
+      try {
+        const savedIds = JSON.parse(localStorage.getItem('ds_saved_jobs') || '[]');
+        setSaved(savedIds.includes(job.id));
+      } catch {}
+    };
+    window.addEventListener('savedJobsChanged', handleSync);
+    return () => window.removeEventListener('savedJobsChanged', handleSync);
+  }, [job.id]);
 
   const handleSave = (e) => {
     e.stopPropagation();
-    setSaved(prev => !prev);
+    try {
+      let savedIds = JSON.parse(localStorage.getItem('ds_saved_jobs') || '[]');
+      if (savedIds.includes(job.id)) {
+        savedIds = savedIds.filter(id => id !== job.id);
+      } else {
+        savedIds.push(job.id);
+      }
+      localStorage.setItem('ds_saved_jobs', JSON.stringify(savedIds));
+      window.dispatchEvent(new Event('savedJobsChanged'));
+      setSaved(savedIds.includes(job.id));
+    } catch (err) {
+      console.error('Error saving job:', err);
+    }
   };
 
   return (
