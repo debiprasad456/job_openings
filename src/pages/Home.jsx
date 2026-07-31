@@ -95,40 +95,65 @@ export default function Home() {
   return (
     <div className="page-wrapper">
 
-      {/* ── Hero Section ── */}
+      {/* ── Hero Section (Apna Style) ── */}
       <section className="hero" aria-label="Job Search">
-        <div className="hero-pattern" aria-hidden="true" />
         <div className="container">
           <div className="hero-content">
 
             <div className="hero-eyebrow">
-              ✨ Now Hiring — MBA Professionals
+              INDIA'S #1 JOB PLATFORM
             </div>
 
             <h1 className="hero-title">
-              Find Your Dream<br />
-              <span className="highlight">MBA Career</span> with Us
+              Your job search ends here
             </h1>
 
             <p className="hero-subtitle">
-              Diverse Solutions is actively hiring talented MBA graduates and professionals
-              across Finance, Marketing, HR, Operations, and more.
+              Discover 50 lakh+ career opportunities across top companies and roles
             </p>
 
-            {/* Search Bar */}
+            {/* Unified 3-Segment Search Bar */}
             <form className="hero-search" onSubmit={handleSearch} role="search" aria-label="Search jobs">
+              
+              {/* Field 1: Title / Skill */}
               <div className="search-field">
                 <span className="search-field-icon">🔍</span>
                 <input
                   type="text"
-                  placeholder="Job title, skill, or keyword..."
+                  placeholder="Search jobs by 'title', 'company'..."
                   value={searchTitle}
                   onChange={e => setSearchTitle(e.target.value)}
-                  aria-label="Search by job title or keyword"
+                  aria-label="Search by job title or skill"
                   id="job-search-input"
                 />
               </div>
+              
               <div className="search-divider" aria-hidden="true" />
+              
+              {/* Field 2: Experience Selector */}
+              <div className="search-field">
+                <span className="search-field-icon">💼</span>
+                <select
+                  value={filters.experience[0] || ''}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setFilters(prev => ({ ...prev, experience: val ? [val] : [] }));
+                  }}
+                  aria-label="Experience dropdown"
+                  id="experience-search-select"
+                  style={{ color: filters.experience.length ? 'var(--color-text-primary)' : 'var(--color-text-disabled)' }}
+                >
+                  <option value="">Your Experience...</option>
+                  <option value="fresher">Fresher / Any</option>
+                  <option value="0-2">0 - 2 Years</option>
+                  <option value="2-5">2 - 5 Years</option>
+                  <option value="5+">5+ Years</option>
+                </select>
+              </div>
+
+              <div className="search-divider" aria-hidden="true" />
+
+              {/* Field 3: Location */}
               <div className="search-field">
                 <span className="search-field-icon">📍</span>
                 <select
@@ -138,7 +163,7 @@ export default function Home() {
                   id="location-search-select"
                   style={{ color: searchLocation ? 'var(--color-text-primary)' : 'var(--color-text-disabled)' }}
                 >
-                  <option value="">All Locations</option>
+                  <option value="">Search for an area...</option>
                   <option value="Mumbai, Maharashtra">Mumbai</option>
                   <option value="Delhi NCR">Delhi NCR</option>
                   <option value="Bengaluru, Karnataka">Bengaluru</option>
@@ -148,15 +173,17 @@ export default function Home() {
                   <option value="Ahmedabad, Gujarat">Ahmedabad</option>
                 </select>
               </div>
+
+              {/* Submit Button */}
               <button type="submit" className="search-btn" id="search-submit-btn">
-                🔍 Search Jobs
+                Search jobs
               </button>
             </form>
 
             {/* Popular Searches */}
             <div className="hero-popular" role="group" aria-label="Popular searches">
-              <span className="hero-popular-label">Popular:</span>
-              {['MBA Finance', 'Marketing Manager', 'HRBP', 'Strategy', 'Business Analyst'].map(term => (
+              <span className="hero-popular-label">Popular Searches:</span>
+              {['Work From Home', 'Software Engineer', 'Marketing Manager', 'HRBP', 'Finance', 'Data Analyst'].map(term => (
                 <button
                   key={term}
                   className="popular-tag"
@@ -166,26 +193,6 @@ export default function Home() {
                   {term}
                 </button>
               ))}
-            </div>
-
-            {/* Stats */}
-            <div className="hero-stats" aria-label="Portal statistics">
-              <div className="hero-stat">
-                <span className="hero-stat-number">8+</span>
-                <span className="hero-stat-label">Open Positions</span>
-              </div>
-              <div className="hero-stat">
-                <span className="hero-stat-number">6</span>
-                <span className="hero-stat-label">Departments</span>
-              </div>
-              <div className="hero-stat">
-                <span className="hero-stat-number">7</span>
-                <span className="hero-stat-label">Cities</span>
-              </div>
-              <div className="hero-stat">
-                <span className="hero-stat-number">₹6–18L</span>
-                <span className="hero-stat-label">Salary Range</span>
-              </div>
             </div>
 
           </div>

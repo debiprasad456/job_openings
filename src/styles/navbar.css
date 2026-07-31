@@ -24,7 +24,7 @@
   gap: var(--space-6);
 }
 
-/* Logo */
+/* Logo - Diverse Solutions */
 .navbar-logo {
   display: flex;
   align-items: center;
@@ -49,33 +49,36 @@
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--fw-bold);
-  color: var(--color-navy);
+  color: #1e293b;
   letter-spacing: -0.02em;
 }
 
 .navbar-logo-tagline {
   font-size: 10px;
-  font-weight: var(--fw-medium);
-  color: var(--color-primary);
+  font-weight: var(--fw-bold);
+  color: #168a67;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-/* Nav Links */
+/* Nav Links & Badges */
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   flex: 1;
   justify-content: center;
 }
 
 .navbar-link {
-  padding: var(--space-2) var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-secondary);
+  font-weight: var(--fw-semibold);
+  color: #1e293b;
   text-decoration: none;
   transition: all var(--transition-fast);
   white-space: nowrap;
@@ -84,15 +87,59 @@
 .navbar-link:hover,
 .navbar-link.active {
   color: var(--color-primary);
-  background: var(--color-primary-subtle);
+}
+
+.badge-new {
+  background: var(--color-badge-new);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-left: 2px;
+}
+
+.chevron-icon {
+  font-size: 10px;
+  color: #64748b;
+  margin-left: 2px;
 }
 
 /* Auth Buttons */
 .navbar-auth {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
   flex-shrink: 0;
+}
+
+.employer-login-link {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  color: #168a67;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.employer-login-link:hover {
+  color: #0f6c50;
+  text-decoration: underline;
+}
+
+.candidate-login-btn {
+  background-color: #168a67;
+  color: #ffffff;
+  font-weight: var(--fw-semibold);
+  padding: var(--space-2) var(--space-5);
+  border-radius: 8px;
+  font-size: var(--text-sm);
+  box-shadow: 0 2px 4px rgba(22, 138, 103, 0.2);
+}
+
+.candidate-login-btn:hover {
+  background-color: #0f6c50;
 }
 
 /* User Menu Dropdown */

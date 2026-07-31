@@ -12,8 +12,8 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="footer-brand">
             <div className="footer-logo">
-              <img src="/assets/logo.png" alt="Diverse Solutions Logo" />
-              <span className="footer-logo-text">Diverse Solutions</span>
+              <img src="/assets/logo.png" alt="Diverse Solutions Logo" style={{ height: '36px', width: 'auto' }} />
+              <span className="footer-logo-text" style={{ color: '#ffffff', fontSize: 'var(--text-lg)', fontWeight: 'var(--fw-bold)' }}>Diverse Solutions</span>
             </div>
             <p className="footer-tagline">
               Connecting talented MBA professionals with top companies across India.

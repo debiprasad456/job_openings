@@ -90,7 +90,7 @@ export default function Navbar({ user, onLogout }) {
         <div className="container">
           <div className="navbar-inner">
 
-            {/* Logo */}
+            {/* Logo - Diverse Solutions */}
             <Link to="/" className="navbar-logo" aria-label="Diverse Solutions Home">
               <img src="/assets/logo.png" alt="Diverse Solutions Logo" />
               <div className="navbar-logo-text">
@@ -99,7 +99,7 @@ export default function Navbar({ user, onLogout }) {
               </div>
             </Link>
 
-            {/* Desktop Nav Links */}
+            {/* Desktop Nav Links (Apna style) */}
             <div className="navbar-links" role="menubar">
               <NavLink to="/" end className={({ isActive }) => `navbar-link${isActive ? ' active' : ''}`} role="menuitem">
                 Browse Jobs
@@ -194,8 +194,8 @@ export default function Navbar({ user, onLogout }) {
                 </div>
               ) : (
                 <>
-                  <Link to="/login" className="btn btn-outline-navy btn-sm">Sign In</Link>
-                  <Link to="/register" className="btn btn-primary btn-sm">Register Free</Link>
+                  <Link to="/login" className="employer-login-link">Employer Login</Link>
+                  <Link to="/login" className="btn btn-primary candidate-login-btn">Candidate Login</Link>
                 </>
               )}
             </div>

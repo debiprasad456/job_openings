@@ -1,6 +1,6 @@
 /* ============================================================
-   DIVERSE SOLUTIONS — GLOBAL DESIGN SYSTEM
-   Naukri-inspired palette: Deep Navy + Vibrant Orange
+   DIVERSE SOLUTIONS — APNA PORTAL DESIGN SYSTEM
+   Apna-inspired palette: Emerald Green + Clean Light Background
    ============================================================ */
 
 /* ── Google Fonts are loaded in index.html ── */
@@ -8,46 +8,48 @@
 /* ── CSS Custom Properties ── */
 :root {
   /* Brand Colors */
-  --color-primary: #f26522;       /* Naukri-style orange */
-  --color-primary-dark: #d4531a;
-  --color-primary-light: #ff8c55;
-  --color-primary-subtle: #fff3ed;
+  --color-primary: #168a67;       /* Apna-style Emerald Green */
+  --color-primary-dark: #0f6c50;
+  --color-primary-light: #22a37c;
+  --color-primary-subtle: #e6f7f2;
 
-  --color-navy: #1a2e5a;          /* Deep navy */
-  --color-navy-dark: #0f1e3d;
-  --color-navy-light: #2a4080;
-  --color-navy-subtle: #eef2fa;
+  --color-navy: #1e293b;          /* Dark Slate */
+  --color-navy-dark: #0f172a;
+  --color-navy-light: #334155;
+  --color-navy-subtle: #f1f5f9;
+
+  --color-badge-new: #e05638;     /* Bright Orange/Red for "New" tags */
 
   /* Neutral Palette */
   --color-white: #ffffff;
-  --color-bg: #f5f7fa;
+  --color-bg: #f8fafc;
   --color-surface: #ffffff;
-  --color-surface-alt: #f0f4f8;
+  --color-surface-alt: #f1f5f9;
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
 
   /* Text */
-  --color-text-primary: #1a202c;
-  --color-text-secondary: #4a5568;
-  --color-text-muted: #718096;
-  --color-text-disabled: #a0aec0;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-disabled: #94a3b8;
 
   /* Status Colors */
-  --color-success: #38a169;
-  --color-success-bg: #f0fff4;
-  --color-warning: #d69e2e;
-  --color-warning-bg: #fffff0;
-  --color-error: #e53e3e;
-  --color-error-bg: #fff5f5;
-  --color-info: #3182ce;
-  --color-info-bg: #ebf8ff;
+  --color-success: #168a67;
+  --color-success-bg: #e6f7f2;
+  --color-warning: #d97706;
+  --color-warning-bg: #fffbeb;
+  --color-error: #dc2626;
+  --color-error-bg: #fef2f2;
+  --color-info: #0284c7;
+  --color-info-bg: #f0f9ff;
 
   /* Application Status Colors */
-  --status-applied: #3182ce;
-  --status-review: #d69e2e;
-  --status-shortlisted: #38a169;
-  --status-rejected: #e53e3e;
-  --status-selected: #805ad5;
+  --status-applied: #0284c7;
+  --status-review: #d97706;
+  --status-shortlisted: #168a67;
+  --status-rejected: #dc2626;
+  --status-selected: #7c3aed;
 
   /* Typography */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
