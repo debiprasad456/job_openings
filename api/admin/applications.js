@@ -20,7 +20,7 @@ function verifyAdmin(req) {
   }
   try {
     const decoded = jwt.verify(auth.slice(7), SECRET_KEY);
-    if (decoded.role !== 'admin') {
+    if (decoded.role !== 'admin' && decoded.role !== 'employer') {
       const err = new Error('Forbidden');
       err.status = 403;
       throw err;

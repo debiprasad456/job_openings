@@ -44,16 +44,16 @@ export default async function handler(req, res) {
 
     const users = db.collection('users');
 
-    // ── Auto-seed initial Admin user into MongoDB if not present ──
-    if (cleanEmail === 'admin@diversesolutions.com') {
-      const existingAdmin = await users.findOne({ email: cleanEmail });
-      if (!existingAdmin) {
+    // ── Auto-seed initial Employer user into MongoDB if not present ──
+    if (cleanEmail === 'admin@diversesolutions.com' || cleanEmail === 'employer@diversesolutions.com') {
+      const existingUser = await users.findOne({ email: cleanEmail });
+      if (!existingUser) {
         const passwordHash = await bcrypt.hash('Admin@1234', 10);
         await users.insertOne({
-          name: 'Admin User',
+          name: 'Employer User',
           email: cleanEmail,
-          phone: '9000000000',
-          role: 'admin',
+          phone: '8260054398',
+          role: 'employer',
           passwordHash: passwordHash,
           createdAt: new Date(),
         });

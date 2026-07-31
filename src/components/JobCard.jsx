@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 // ── Relative time helper ──
@@ -24,6 +24,7 @@ const TYPE_BADGE = {
 
 export default function JobCard({ job }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [saved, setSaved] = useState(() => {
     try {
       const savedIds = JSON.parse(localStorage.getItem('ds_saved_jobs') || '[]');
@@ -47,6 +48,10 @@ export default function JobCard({ job }) {
 
   const handleSave = (e) => {
     e.stopPropagation();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     try {
       let savedIds = JSON.parse(localStorage.getItem('ds_saved_jobs') || '[]');
       if (savedIds.includes(job.id)) {
@@ -113,6 +118,8 @@ export default function JobCard({ job }) {
       {/* Tags */}
       <div className="job-card-tags">
         <span className={`badge ${TYPE_BADGE[job.type] || 'badge-gray'}`}>{job.type}</span>
+        {job.education && <span className="badge badge-navy">🎓 {job.education}</span>}
+        {job.interviewDetails?.isWalkIn && <span className="badge badge-orange" style={{ background: '#fff7ed', color: '#ea580c', border: '1px solid #ffedd5' }}>🚶‍♂️ Walk-In Drive</span>}
         {job.tags.slice(0, 3).map(tag => (
           <span key={tag} className="badge badge-gray">{tag}</span>
         ))}

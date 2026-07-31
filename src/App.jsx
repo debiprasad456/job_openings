@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import EmployerLogin from './pages/EmployerLogin';
 import Register from './pages/Register';
 import Apply from './pages/Apply';
 import Dashboard from './pages/Dashboard';
@@ -20,20 +21,24 @@ function PrivateRoute({ children }) {
   return user ? children : <Navigate to="/login" replace />;
 }
 
-// ── Admin Route: must be admin role ──
-function AdminRoute({ children }) {
+// ── Employer Route: must be employer or admin role ──
+function EmployerRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}><div className="spinner" /></div>;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== 'admin') return <Navigate to="/" replace />;
+  if (user.role !== 'admin' && user.role !== 'employer') return <Navigate to="/" replace />;
   return children;
 }
 
-// ── Guest Route: redirect to home if already logged in ──
+// ── Guest Route: redirect to appropriate portal if already logged in ──
 function GuestRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}><div className="spinner" /></div>;
-  return !user ? children : <Navigate to="/" replace />;
+  if (user) {
+    const dest = (user.role === 'employer' || user.role === 'admin') ? '/employer' : '/';
+    return <Navigate to={dest} replace />;
+  }
+  return children;
 }
 
 // ── App Shell ──
@@ -48,6 +53,10 @@ function AppShell() {
 
         <Route path="/login" element={
           <GuestRoute><Login /></GuestRoute>
+        } />
+
+        <Route path="/employer-login" element={
+          <GuestRoute><EmployerLogin /></GuestRoute>
         } />
 
         <Route path="/register" element={
@@ -66,8 +75,12 @@ function AppShell() {
           <PrivateRoute><Dashboard /></PrivateRoute>
         } />
 
+        <Route path="/employer" element={
+          <EmployerRoute><Admin /></EmployerRoute>
+        } />
+
         <Route path="/admin" element={
-          <AdminRoute><Admin /></AdminRoute>
+          <Navigate to="/employer" replace />
         } />
 
         {/* 404 fallback */}

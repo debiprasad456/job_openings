@@ -27,6 +27,27 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [sortBy, setSortBy] = useState('recent');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [allJobs, setAllJobs] = useState(JOBS);
+
+  // Fetch dynamic jobs from API
+  React.useEffect(() => {
+    async function loadApiJobs() {
+      try {
+        const res = await fetch('/api/jobs');
+        if (res.ok) {
+          const apiJobs = await res.json();
+          if (apiJobs && apiJobs.length > 0) {
+            const apiJobIds = new Set(apiJobs.map(j => j.id));
+            const remainingDefault = JOBS.filter(j => !apiJobIds.has(j.id));
+            setAllJobs([...apiJobs, ...remainingDefault]);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load jobs from API, falling back to local dataset.', err.message);
+      }
+    }
+    loadApiJobs();
+  }, []);
 
   // ── Active filter count ──
   const activeFilterCount = useMemo(() =>
@@ -36,7 +57,7 @@ export default function Home() {
 
   // ── Filtered & Sorted Jobs ──
   const filteredJobs = useMemo(() => {
-    let result = JOBS;
+    let result = allJobs;
 
     // Search by title
     if (searchTitle.trim()) {
@@ -265,7 +286,7 @@ export default function Home() {
               {/* Header Row */}
               <div className="jobs-header">
                 <p className="jobs-count">
-                  Showing <strong>{filteredJobs.length}</strong> of {JOBS.length} openings
+                  Showing <strong>{filteredJobs.length}</strong> of {allJobs.length} openings
                   {activeFilterCount > 0 && (
                     <button
                       onClick={handleClearAll}

@@ -53,7 +53,11 @@ const server = http.createServer(async (req, res) => {
 
   // Map URL pathname to local file inside api/
   const relativePath = pathname.startsWith('/') ? pathname.slice(1) : pathname;
-  const filePath = path.join(process.cwd(), relativePath + '.js');
+  let filePath = path.join(process.cwd(), relativePath + '.js');
+
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(process.cwd(), relativePath, 'index.js');
+  }
 
   if (!fs.existsSync(filePath)) {
     console.warn(`File not found: ${filePath}`);

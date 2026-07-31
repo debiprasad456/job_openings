@@ -48,7 +48,10 @@ export default function Login() {
         throw new Error(data?.error || `Server error (${res.status}). Please ensure backend server is running.`);
       }
       login(data.user, data.token);
-      navigate(returnTo, { replace: true });
+      const targetPath = (data.user?.role === 'employer' || data.user?.role === 'admin')
+        ? '/employer'
+        : (returnTo && returnTo !== '/' ? returnTo : '/');
+      navigate(targetPath, { replace: true });
     } catch (err) {
       setApiError(err.message);
     } finally {
@@ -107,10 +110,10 @@ export default function Login() {
         <div className="auth-form-wrap animate-fade-in-up">
 
           <div className="auth-form-header">
-            <h1 className="auth-form-title">Welcome back! 👋</h1>
-            <p className="auth-form-subtitle">
-              Don't have an account?{' '}
-              <Link to="/register">Create one free →</Link>
+            <span className="auth-badge" style={{ background: '#e0e7ff', color: '#3730a3' }}>👤 Job Seeker Access</span>
+            <h1 className="auth-form-title">Candidate Login 🎓</h1>
+            <p className="auth-form-sub">
+              Sign in to track your job applications and apply for top opportunities.
             </p>
           </div>
 
@@ -198,8 +201,17 @@ export default function Login() {
             <div style={{ textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
               New to Diverse Solutions?{' '}
               <Link to="/register" style={{ color: 'var(--color-primary)', fontWeight: '600' }}>
-                Create a free account
+                Create a free candidate account
               </Link>
+            </div>
+
+            <div style={{ marginTop: '1.5rem', textAlign: 'center', paddingTop: '1.25rem', borderTop: '1px solid var(--color-border)' }}>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+                Are you an Employer or Recruiter?{' '}
+                <Link to="/employer-login" style={{ fontWeight: 'var(--fw-semibold)', color: '#0369a1' }}>
+                  Employer Login ›
+                </Link>
+              </p>
             </div>
 
           </div>
