@@ -51,13 +51,13 @@ export default function EmployerJobPosting({ onJobCreated, onClose }) {
     skills: 'Communication, Sales, MS Office',
 
     // Step 3: Interviewer info
-    isWalkIn: true,
-    interviewAddress: 'Ground floor, Plot, Palasuni, Rasulgarh, Bhubaneswar, Odisha 751025',
-    walkinStartDate: new Date().toISOString().split('T')[0],
-    walkinEndDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-    walkinStartTime: '10:00 AM',
-    walkinEndTime: '04:00 PM',
-    interviewInstructions: 'Bring updated CV, Passport size photo, and ID proof.',
+    isWalkIn: false,
+    interviewAddress: '',
+    walkinStartDate: '',
+    walkinEndDate: '',
+    walkinStartTime: '',
+    walkinEndTime: '',
+    interviewInstructions: '',
   });
 
   const updateForm = (field, val) => {
@@ -76,7 +76,7 @@ export default function EmployerJobPosting({ onJobCreated, onClose }) {
         return;
       }
     }
-    setStep(prev => Math.min(prev + 1, 4));
+    setStep(prev => Math.min(prev + 1, 3));
   };
 
   const handleBack = () => {
@@ -161,14 +161,9 @@ export default function EmployerJobPosting({ onJobCreated, onClose }) {
           <span className="step-label">Candidate requirements</span>
         </div>
         <div className="step-line" />
-        <div className={`step-item ${step >= 3 ? 'active' : ''} ${step > 3 ? 'completed' : ''}`}>
-          <div className="step-circle">{step > 3 ? '✓' : '3'}</div>
-          <span className="step-label">Interviewer info</span>
-        </div>
-        <div className="step-line" />
-        <div className={`step-item ${step >= 4 ? 'active' : ''}`}>
-          <div className="step-circle">4</div>
-          <span className="step-label">Job preview</span>
+        <div className={`step-item ${step >= 3 ? 'active' : ''}`}>
+          <div className="step-circle">3</div>
+          <span className="step-label">Review & Publish</span>
         </div>
       </div>
 
@@ -359,120 +354,14 @@ export default function EmployerJobPosting({ onJobCreated, onClose }) {
               ← Back
             </button>
             <button type="button" className="btn btn-primary btn-lg" onClick={handleNext}>
-              Next: Interview Details →
+              Preview & Confirm →
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Step 3: Interviewer & Walk-in Info ── */}
+      {/* ── Step 3: Job Preview & Publishing ── */}
       {step === 3 && (
-        <div className="employer-step-card animate-fade-in">
-          <h2 className="step-title">Interview method and address</h2>
-          <p className="step-subtitle">Let candidates know how and where the interview will be conducted.</p>
-
-          <div className="form-group">
-            <label className="form-label">Is this a walk-in interview? *</label>
-            <div style={{ display: 'flex', gap: '20px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="radio"
-                  name="walkin"
-                  checked={formData.isWalkIn === true}
-                  onChange={() => updateForm('isWalkIn', true)}
-                />
-                Yes (Walk-in)
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="radio"
-                  name="walkin"
-                  checked={formData.isWalkIn === false}
-                  onChange={() => updateForm('isWalkIn', false)}
-                />
-                No (Online / Scheduled call)
-              </label>
-            </div>
-          </div>
-
-          {formData.isWalkIn && (
-            <>
-              <div className="form-group">
-                <label className="form-label">Walk-in Interview Address *</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={formData.interviewAddress}
-                  onChange={e => updateForm('interviewAddress', e.target.value)}
-                  placeholder="Full office address"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Walk-in Dates *</label>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={formData.walkinStartDate}
-                    onChange={e => updateForm('walkinStartDate', e.target.value)}
-                  />
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={formData.walkinEndDate}
-                    onChange={e => updateForm('walkinEndDate', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Walk-in Timings *</label>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.walkinStartTime}
-                    onChange={e => updateForm('walkinStartTime', e.target.value)}
-                    placeholder="10:00 AM"
-                  />
-                  <span>-</span>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.walkinEndTime}
-                    onChange={e => updateForm('walkinEndTime', e.target.value)}
-                    placeholder="04:00 PM"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Other Instructions</label>
-                <textarea
-                  className="form-textarea"
-                  rows="3"
-                  value={formData.interviewInstructions}
-                  onChange={e => updateForm('interviewInstructions', e.target.value)}
-                  placeholder="e.g. Bring updated CV, ID proof"
-                />
-              </div>
-            </>
-          )}
-
-          <div className="form-actions">
-            <button type="button" className="btn btn-outline" onClick={handleBack}>
-              ← Back
-            </button>
-            <button type="button" className="btn btn-primary btn-lg" onClick={handleNext}>
-              Preview Job Posting →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Step 4: Job Preview & Publishing ── */}
-      {step === 4 && (
         <div className="employer-step-card animate-fade-in">
           <h2 className="step-title">Job Preview & Confirmation</h2>
           <p className="step-subtitle">Review your job listing details before publishing to candidates.</p>
@@ -493,15 +382,6 @@ export default function EmployerJobPosting({ onJobCreated, onClose }) {
               <div><strong>English:</strong> {formData.englishLevel}</div>
               <div><strong>Experience:</strong> {formData.experience}</div>
             </div>
-
-            {formData.isWalkIn && (
-              <div className="preview-walkin-box">
-                <h4>🚶‍♂️ Walk-In Interview Details</h4>
-                <p><strong>Address:</strong> {formData.interviewAddress}</p>
-                <p><strong>Timings:</strong> {formData.walkinStartTime} - {formData.walkinEndTime}</p>
-                <p><strong>Notes:</strong> {formData.interviewInstructions}</p>
-              </div>
-            )}
           </div>
 
           <div className="form-actions">
