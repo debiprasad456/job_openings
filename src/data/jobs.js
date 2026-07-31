@@ -7,7 +7,7 @@ export const JOBS = [
     title: "MBA Finance Analyst",
     department: "Finance & Accounts",
     category: "Finance",
-    location: "Mumbai, Maharashtra",
+    location: "Bhubaneswar, Odisha",
     type: "Full Time",
     experience: "0–2 years",
     salary: "₹6–9 LPA",
@@ -363,6 +363,7 @@ export const CATEGORIES = [
 ];
 
 export const LOCATIONS = [
+  "Bhubaneswar, Odisha",
   "Mumbai, Maharashtra",
   "Delhi NCR",
   "Bengaluru, Karnataka",

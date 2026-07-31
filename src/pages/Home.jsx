@@ -164,6 +164,7 @@ export default function Home() {
                   style={{ color: searchLocation ? 'var(--color-text-primary)' : 'var(--color-text-disabled)' }}
                 >
                   <option value="">Search for an area...</option>
+                  <option value="Bhubaneswar, Odisha">Bhubaneswar</option>
                   <option value="Mumbai, Maharashtra">Mumbai</option>
                   <option value="Delhi NCR">Delhi NCR</option>
                   <option value="Bengaluru, Karnataka">Bengaluru</option>

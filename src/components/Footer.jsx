@@ -57,7 +57,7 @@ export default function Footer() {
             <div className="footer-links">
               <div className="footer-contact-item">
                 <span className="footer-contact-icon">📍</span>
-                <span>Diverse Solutions Pvt. Ltd.<br />Mumbai, Maharashtra, India</span>
+                <span>Diverse Solutions Pvt. Ltd.<br />Ground floor, Plot, Palasuni, Rasulgarh, Bhubaneswar, Odisha 751025</span>
               </div>
               <div className="footer-contact-item">
                 <span className="footer-contact-icon">✉️</span>
@@ -65,7 +65,9 @@ export default function Footer() {
               </div>
               <div className="footer-contact-item">
                 <span className="footer-contact-icon">📞</span>
-                <span>+91 98765 43210</span>
+                <a href="https://wa.me/918260054398?text=Hello%20Diverse%20Solutions%2C%20I%20have%20an%20inquiry%20regarding%20job%20openings." target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                  +91 8260054398 (WhatsApp)
+                </a>
               </div>
             </div>
           </div>

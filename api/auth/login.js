@@ -27,19 +27,6 @@ export default async function handler(req, res) {
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // ── Built-in Admin Account (dev & fallback) ──
-    if (cleanEmail === 'admin@diversesolutions.com' && password === 'Admin@1234') {
-      const adminUser = {
-        id: 'admin_001',
-        name: 'Admin User',
-        email: 'admin@diversesolutions.com',
-        phone: '9000000000',
-        role: 'admin',
-      };
-      const token = jwt.sign(adminUser, SECRET_KEY, { expiresIn: '7d' });
-      return res.status(200).json({ user: adminUser, token });
-    }
-
     let db;
     try {
       db = await getDb();
@@ -56,6 +43,22 @@ export default async function handler(req, res) {
     }
 
     const users = db.collection('users');
+
+    // ── Auto-seed initial Admin user into MongoDB if not present ──
+    if (cleanEmail === 'admin@diversesolutions.com') {
+      const existingAdmin = await users.findOne({ email: cleanEmail });
+      if (!existingAdmin) {
+        const passwordHash = await bcrypt.hash('Admin@1234', 10);
+        await users.insertOne({
+          name: 'Admin User',
+          email: cleanEmail,
+          phone: '9000000000',
+          role: 'admin',
+          passwordHash: passwordHash,
+          createdAt: new Date(),
+        });
+      }
+    }
 
     const user = await users.findOne({ email: cleanEmail });
     if (!user) {

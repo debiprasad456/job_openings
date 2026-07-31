@@ -46,16 +46,6 @@ export function mockRegister({ name, email, phone, password }) {
 }
 
 export function mockLogin({ email, password }) {
-  // ── Built-in admin account (dev only) ──
-  if (
-    email.toLowerCase().trim() === 'admin@diversesolutions.com' &&
-    password === 'Admin@1234'
-  ) {
-    const adminUser = { id: 'admin_001', name: 'Admin User', email: 'admin@diversesolutions.com', phone: '9000000000', role: 'admin' };
-    const token = makeToken(adminUser);
-    return { user: adminUser, token };
-  }
-
   const users = getUsers();
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
 
