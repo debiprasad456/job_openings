@@ -1,17 +1,6 @@
 // POST /api/auth/forgot-password
-import { MongoClient } from 'mongodb';
 import nodemailer from 'nodemailer';
-
-const MONGODB_URI = process.env.MONGODB_URI;
-
-let client;
-async function getDb() {
-  if (!client) {
-    client = new MongoClient(MONGODB_URI);
-    await client.connect();
-  }
-  return client.db('diverse-solutions');
-}
+import { getDb } from '../../lib/db.js';
 
 export default async function handler(req, res) {
   // CORS

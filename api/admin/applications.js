@@ -1,21 +1,15 @@
 // GET /api/admin/applications — Admin: list all applications
 // PATCH /api/admin/applications — Admin: update status
 
-import { MongoClient, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
+import { getDb } from '../../lib/db.js';
 
-const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
   throw new Error('JWT_SECRET environment variable is missing.');
 }
 const SECRET_KEY = JWT_SECRET || 'dev-secret-change-in-production';
-
-let client;
-async function getDb() {
-  if (!client) { client = new MongoClient(MONGODB_URI); await client.connect(); }
-  return client.db('diverse-solutions');
-}
 
 function verifyAdmin(req) {
   const auth = req.headers.authorization;

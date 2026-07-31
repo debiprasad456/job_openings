@@ -43,9 +43,9 @@ export default function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: form.email, password: form.password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(data.error || 'Login failed.');
+        throw new Error(data?.error || `Server error (${res.status}). Please ensure backend server is running.`);
       }
       login(data.user, data.token);
       navigate(returnTo, { replace: true });

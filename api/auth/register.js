@@ -2,25 +2,15 @@
 // ── MongoDB Atlas integration (Phase 3 API) ──
 // Connect MONGODB_URI in Vercel environment variables to activate.
 
-import { MongoClient } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { getDb } from '../../lib/db.js';
 
-const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
   throw new Error('JWT_SECRET environment variable is missing.');
 }
 const SECRET_KEY = JWT_SECRET || 'dev-secret-change-in-production';
-
-let client;
-async function getDb() {
-  if (!client) {
-    client = new MongoClient(MONGODB_URI);
-    await client.connect();
-  }
-  return client.db('diverse-solutions');
-}
 
 export default async function handler(req, res) {
   // CORS
@@ -41,7 +31,21 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Password must be at least 8 characters.' });
     }
 
-    const db = await getDb();
+    let db;
+    try {
+      db = await getDb();
+    } catch (dbErr) {
+      console.error('[register db error]', dbErr.message);
+      if (dbErr.message.includes('bad auth') || dbErr.code === 8000) {
+        return res.status(500).json({
+          error: 'MongoDB Atlas authentication failed. Please check your MONGODB_URI in .env.'
+        });
+      }
+      return res.status(500).json({
+        error: `Database connection error: ${dbErr.message}`
+      });
+    }
+
     const users = db.collection('users');
 
     // Check duplicate email
@@ -71,6 +75,6 @@ export default async function handler(req, res) {
     return res.status(201).json({ user, token });
   } catch (err) {
     console.error('[register]', err);
-    return res.status(500).json({ error: 'Internal server error.' });
+    return res.status(500).json({ error: `Internal server error: ${err.message}` });
   }
 }

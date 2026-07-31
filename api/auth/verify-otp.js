@@ -1,19 +1,9 @@
 // POST /api/auth/verify-otp
-import { MongoClient } from 'mongodb';
 import jwt from 'jsonwebtoken';
+import { getDb } from '../../lib/db.js';
 
-const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 const SECRET_KEY = JWT_SECRET || 'dev-secret-change-in-production';
-
-let client;
-async function getDb() {
-  if (!client) {
-    client = new MongoClient(MONGODB_URI);
-    await client.connect();
-  }
-  return client.db('diverse-solutions');
-}
 
 export default async function handler(req, res) {
   // CORS

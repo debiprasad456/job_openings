@@ -72,9 +72,9 @@ export default function Register() {
           password: form.password,
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(data.error || 'Registration failed.');
+        throw new Error(data?.error || 'Registration failed.');
       }
       login(data.user, data.token);
       navigate('/', { replace: true });
