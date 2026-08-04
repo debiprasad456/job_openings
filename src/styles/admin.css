@@ -1596,3 +1596,222 @@
   color: #168a67;
   text-decoration: none;
 }
+
+/* ── Resumes Management UI ── */
+.resumes-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.resumes-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.resumes-search-wrap .search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.resumes-search-input {
+  width: 100%;
+  padding: 10px 36px 10px 36px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: var(--text-xs);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.resumes-search-input:focus {
+  border-color: #168a67;
+  box-shadow: 0 0 0 3px rgba(22, 138, 103, 0.12);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.resumes-source-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.source-tab-btn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.source-tab-btn.active,
+.source-tab-btn:hover {
+  background: #e6f7f2;
+  border-color: #168a67;
+  color: #168a67;
+}
+
+.resumes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.resume-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.resume-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.resume-card-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  position: relative;
+}
+
+.resume-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #168a67 0%, #0d5f46 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.resume-meta-info {
+  flex: 1;
+}
+
+.resume-candidate-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 2px 0;
+}
+
+.resume-sub-detail {
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.resume-dept-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f766e;
+  background: #ccfbf1;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.source-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.source-badge.uploaded_by_employer {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.source-badge.applied_candidate {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.resume-notes-box {
+  background: #f8fafc;
+  border-left: 3px solid #168a67;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #334155;
+  border-radius: 4px;
+  margin: 12px 0 0 0;
+}
+
+.resume-card-footer {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.resume-file-name {
+  font-size: 11px;
+  color: #64748b;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resume-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-delete-icon {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-icon:hover {
+  background: #fee2e2;
+}

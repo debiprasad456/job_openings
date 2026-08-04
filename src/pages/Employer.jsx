@@ -60,6 +60,22 @@ export default function Employer() {
     hasResume: false,
   });
 
+  // Resumes state & Upload modal
+  const [resumesList, setResumesList] = useState([]);
+  const [resumeSearch, setResumeSearch] = useState('');
+  const [resumeSourceFilter, setResumeSourceFilter] = useState('all'); // 'all' | 'uploaded' | 'applied'
+  const [showUploadResumeModal, setShowUploadResumeModal] = useState(false);
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    department: 'MBA Finance',
+    resumeUrl: '',
+    resumeName: '',
+    notes: '',
+  });
+
   /* ── Load Applications from API ── */
   const refreshApplications = useCallback(async () => {
     if (!user || (user.role !== 'admin' && user.role !== 'employer')) {
@@ -88,6 +104,85 @@ export default function Employer() {
     }
   }, [user]);
 
+  /* ── Load Resumes from API ── */
+  const refreshResumes = useCallback(async () => {
+    if (!user || (user.role !== 'admin' && user.role !== 'employer')) return;
+    try {
+      const token = localStorage.getItem('ds_token');
+      const res = await fetch('/api/resumes', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setResumesList(data);
+      }
+    } catch (e) {
+      console.warn('Could not load resumes list', e);
+    }
+  }, [user]);
+
+  /* ── Upload Resume Handler ── */
+  const handleUploadResumeSubmit = async (e) => {
+    e.preventDefault();
+    if (!uploadForm.name || !uploadForm.email || !uploadForm.resumeUrl) {
+      alert('Please fill candidate name, email, and select a resume file.');
+      return;
+    }
+    setUploadingResume(true);
+    try {
+      const token = localStorage.getItem('ds_token');
+      const res = await fetch('/api/resumes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(uploadForm),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to upload resume.');
+      
+      showToast(`✅ Resume for "${uploadForm.name}" uploaded and synced to database!`);
+      setShowUploadResumeModal(false);
+      setUploadForm({
+        name: '',
+        email: '',
+        phone: '',
+        department: 'MBA Finance',
+        resumeUrl: '',
+        resumeName: '',
+        notes: '',
+      });
+      refreshResumes();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setUploadingResume(false);
+    }
+  };
+
+  /* ── Delete Uploaded Resume ── */
+  const handleDeleteResume = async (resumeId) => {
+    if (!window.confirm('Are you sure you want to delete this uploaded resume?')) return;
+    try {
+      const token = localStorage.getItem('ds_token');
+      const res = await fetch('/api/resumes', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ id: resumeId }),
+      });
+      if (res.ok) {
+        showToast('🗑️ Resume deleted successfully.');
+        refreshResumes();
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   /* ── Load Dynamic Jobs ── */
   const refreshJobs = useCallback(async () => {
     try {
@@ -108,12 +203,53 @@ export default function Employer() {
   useEffect(() => {
     refreshApplications();
     refreshJobs();
-  }, [refreshApplications, refreshJobs]);
+    refreshResumes();
+  }, [refreshApplications, refreshJobs, refreshResumes]);
 
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
   };
+
+  /* ── Read File to Base64 ── */
+  const handleResumeFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size exceeds 10MB limit.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setUploadForm(prev => ({
+        ...prev,
+        resumeUrl: reader.result,
+        resumeName: file.name
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  /* ── Filtered Resumes List ── */
+  const filteredResumes = useMemo(() => {
+    let list = resumesList;
+    if (resumeSourceFilter === 'uploaded') {
+      list = list.filter(r => r.source === 'uploaded_by_employer');
+    } else if (resumeSourceFilter === 'applied') {
+      list = list.filter(r => r.source === 'applied_candidate');
+    }
+
+    if (resumeSearch.trim()) {
+      const q = resumeSearch.toLowerCase().trim();
+      list = list.filter(r =>
+        (r.name && r.name.toLowerCase().includes(q)) ||
+        (r.email && r.email.toLowerCase().includes(q)) ||
+        (r.department && r.department.toLowerCase().includes(q)) ||
+        (r.jobTitle && r.jobTitle.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [resumesList, resumeSourceFilter, resumeSearch]);
 
   /* ── Update application status ── */
   const handleStatusChange = async (appId, newStatus) => {
@@ -224,6 +360,13 @@ export default function Employer() {
               onClick={() => { setActiveTab('database'); setSelectedJob(null); setSidebarOpen(false); }}
             >
               <span className="sidebar-icon">👥</span> Database Matches
+            </button>
+
+            <button
+              className={`sidebar-link ${activeTab === 'resumes' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('resumes'); setSelectedJob(null); setSidebarOpen(false); }}
+            >
+              <span className="sidebar-icon">📄</span> Resumes
             </button>
 
             <button
@@ -535,6 +678,134 @@ export default function Employer() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════
+              VIEW RESUMES MANAGEMENT (Uploaded + Applied Candidate Resumes)
+          ══════════════════════════════════════════════════════════ */}
+          {activeTab === 'resumes' && (
+            <div className="all-jobs-container">
+              <div className="reports-header-row">
+                <div className="all-jobs-title-wrap">
+                  <button
+                    className="employer-sidebar-hamburger"
+                    onClick={() => setSidebarOpen(true)}
+                    aria-label="Open sidebar menu"
+                  >
+                    <span>☰</span>
+                  </button>
+                  <h2>Student & Candidate Resumes ({filteredResumes.length})</h2>
+                </div>
+                <button className="btn-post-job" onClick={() => setShowUploadResumeModal(true)}>
+                  + Upload Student Resume
+                </button>
+              </div>
+
+              {/* Search & Filter Toolbar */}
+              <div className="resumes-toolbar">
+                <div className="resumes-search-wrap">
+                  <span className="search-icon">🔍</span>
+                  <input
+                    type="text"
+                    placeholder="Search by student name, email, department..."
+                    value={resumeSearch}
+                    onChange={e => setResumeSearch(e.target.value)}
+                    className="resumes-search-input"
+                  />
+                  {resumeSearch && (
+                    <button className="search-clear-btn" onClick={() => setResumeSearch('')}>✕</button>
+                  )}
+                </div>
+
+                <div className="resumes-source-tabs">
+                  <button
+                    className={`source-tab-btn ${resumeSourceFilter === 'all' ? 'active' : ''}`}
+                    onClick={() => setResumeSourceFilter('all')}
+                  >
+                    All ({resumesList.length})
+                  </button>
+                  <button
+                    className={`source-tab-btn ${resumeSourceFilter === 'uploaded' ? 'active' : ''}`}
+                    onClick={() => setResumeSourceFilter('uploaded')}
+                  >
+                    📤 Employer Uploaded ({resumesList.filter(r => r.source === 'uploaded_by_employer').length})
+                  </button>
+                  <button
+                    className={`source-tab-btn ${resumeSourceFilter === 'applied' ? 'active' : ''}`}
+                    onClick={() => setResumeSourceFilter('applied')}
+                  >
+                    📋 Job Applications ({resumesList.filter(r => r.source === 'applied_candidate').length})
+                  </button>
+                </div>
+              </div>
+
+              {/* Resumes Grid / Card List */}
+              <div className="resumes-grid" style={{ marginTop: '1.25rem' }}>
+                {filteredResumes.length > 0 ? (
+                  filteredResumes.map(r => {
+                    const initials = (r.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                    return (
+                      <div key={r.id} className="resume-card animate-fade-in">
+                        <div className="resume-card-header">
+                          <div className="resume-avatar">{initials}</div>
+                          <div className="resume-meta-info">
+                            <h3 className="resume-candidate-name">{r.name}</h3>
+                            <div className="resume-sub-detail">
+                              <span>📧 {r.email}</span>
+                              {r.phone && r.phone !== '—' && <span> • 📞 {r.phone}</span>}
+                            </div>
+                            <div className="resume-dept-tag">
+                              🎓 {r.department}
+                            </div>
+                          </div>
+                          <span className={`source-badge ${r.source}`}>
+                            {r.source === 'uploaded_by_employer' ? '📤 Employer Uploaded' : '📋 Applied Candidate'}
+                          </span>
+                        </div>
+
+                        {r.notes && (
+                          <p className="resume-notes-box">
+                            💡 <strong>Notes:</strong> {r.notes}
+                          </p>
+                        )}
+
+                        <div className="resume-card-footer">
+                          <span className="resume-file-name" title={r.resumeName}>
+                            📄 {r.resumeName}
+                          </span>
+
+                          <div className="resume-actions-group">
+                            <a
+                              href={r.resumeUrl}
+                              download={r.resumeName}
+                              className="btn-action-primary"
+                              style={{ textDecoration: 'none', padding: '6px 14px', fontSize: '13px' }}
+                            >
+                              ⬇️ Download
+                            </a>
+                            {r.canDelete && (
+                              <button
+                                className="btn-delete-icon"
+                                onClick={() => handleDeleteResume(r.id)}
+                                title="Delete uploaded student resume"
+                              >
+                                🗑️
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="no-candidates-box" style={{ gridColumn: '1 / -1' }}>
+                    <div className="empty-emoji">📄</div>
+                    <h3>No resumes found</h3>
+                    <p>Click "+ Upload Student Resume" to add student resumes to your database.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -916,6 +1187,109 @@ export default function Employer() {
               }}
               onClose={() => setShowPostJobModal(false)}
             />
+          </div>
+        </div>
+      )}
+
+      {/* ── Upload Student Resume Modal ── */}
+      {showUploadResumeModal && (
+        <div className="admin-modal-overlay" onClick={() => setShowUploadResumeModal(false)}>
+          <div className="admin-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '560px' }}>
+            <div className="admin-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>📤 Upload Student Resume</h3>
+              <button className="admin-modal-close" onClick={() => setShowUploadResumeModal(false)} aria-label="Close modal">✕</button>
+            </div>
+
+            <form onSubmit={handleUploadResumeSubmit} className="post-job-wizard-form">
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Student Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rahul Sharma"
+                  value={uploadForm.name}
+                  onChange={e => setUploadForm({ ...uploadForm, name: e.target.value })}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. rahul.sharma@example.com"
+                    value={uploadForm.email}
+                    onChange={e => setUploadForm({ ...uploadForm, email: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Phone Number</label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. +91 9876543210"
+                    value={uploadForm.phone}
+                    onChange={e => setUploadForm({ ...uploadForm, phone: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Department / Specialization *</label>
+                <select
+                  value={uploadForm.department}
+                  onChange={e => setUploadForm({ ...uploadForm, department: e.target.value })}
+                  className="form-input"
+                >
+                  <option value="MBA Finance">MBA Finance</option>
+                  <option value="Sales & Marketing">Sales & Marketing</option>
+                  <option value="Human Resources (HR)">Human Resources (HR)</option>
+                  <option value="Operations & Logistics">Operations & Logistics</option>
+                  <option value="Software / IT">Software / IT</option>
+                  <option value="Banking & Finance">Banking & Finance</option>
+                  <option value="General Management">General Management</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Upload Resume File (PDF / DOCX / Image) *</label>
+                <input
+                  type="file"
+                  required
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                  onChange={handleResumeFileChange}
+                  className="form-input"
+                />
+                {uploadForm.resumeName && (
+                  <span style={{ fontSize: '12px', color: '#168a67', fontWeight: 600, display: 'block', marginTop: '4px' }}>
+                    ✓ File selected: {uploadForm.resumeName}
+                  </span>
+                )}
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label className="form-label">Notes / Assessment Remarks (Optional)</label>
+                <textarea
+                  rows="2"
+                  placeholder="e.g. Strong in financial modeling, available for immediate joining."
+                  value={uploadForm.notes}
+                  onChange={e => setUploadForm({ ...uploadForm, notes: e.target.value })}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="modal-actions-row" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn-action-outline" onClick={() => setShowUploadResumeModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-post-job" disabled={uploadingResume}>
+                  {uploadingResume ? 'Uploading & Syncing...' : '💾 Upload & Sync to Database'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
