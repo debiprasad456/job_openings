@@ -47,6 +47,7 @@ export default function Employer() {
   const [selectedJob, setSelectedJob] = useState(null); // null = All Jobs list, JobObj = specific job view
   const [selectedStatusTab, setSelectedStatusTab] = useState('All');
   const [selectedApp, setSelectedApp] = useState(null); // Candidate Details Modal
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar drawer toggle
   
   // Applications & Jobs state
   const [applications, setApplications] = useState([]);
@@ -183,57 +184,63 @@ export default function Employer() {
   return (
     <div className="apna-employer-page">
 
+      {/* Backdrop overlay for mobile drawer */}
+      {sidebarOpen && (
+        <div className="employer-sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* ── Main Employer Layout: Left Sidebar + Right Content ── */}
       <div className="apna-employer-body">
 
-        {/* ── Left Sidebar Navigation ── */}
-        <aside className="apna-sidebar">
-          <div className="sidebar-company-card">
-            <div className="company-avatar">D</div>
-            <div className="company-info">
-              <span className="company-name">Diverse Solutions</span>
-              <span className="company-role">Employer</span>
+        {/* ── Left Sidebar Navigation Drawer ── */}
+        <aside className={`apna-sidebar${sidebarOpen ? ' mobile-open' : ''}`}>
+          <div className="sidebar-mobile-header">
+            <div className="sidebar-company-card">
+              <div className="company-avatar">D</div>
+              <div className="company-info">
+                <span className="company-name">Diverse Solutions</span>
+                <span className="company-role">Employer</span>
+              </div>
             </div>
+            <button
+              className="sidebar-close-btn"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar menu"
+            >
+              ✕
+            </button>
           </div>
 
           <nav className="sidebar-nav">
             <button
               className={`sidebar-link ${activeTab === 'jobs' && !selectedJob ? 'active' : ''}`}
-              onClick={() => { setActiveTab('jobs'); setSelectedJob(null); }}
+              onClick={() => { setActiveTab('jobs'); setSelectedJob(null); setSidebarOpen(false); }}
             >
               <span className="sidebar-icon">💼</span> Jobs
             </button>
 
             <button
               className={`sidebar-link ${activeTab === 'database' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('database'); setSelectedJob(null); }}
+              onClick={() => { setActiveTab('database'); setSelectedJob(null); setSidebarOpen(false); }}
             >
               <span className="sidebar-icon">👥</span> Database Matches
             </button>
 
             <button
               className={`sidebar-link ${activeTab === 'reports' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('reports'); setSelectedJob(null); }}
+              onClick={() => { setActiveTab('reports'); setSelectedJob(null); setSidebarOpen(false); }}
             >
               <span className="sidebar-icon">📊</span> Reports
             </button>
 
             <button
               className={`sidebar-link ${activeTab === 'credits' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('credits'); setSelectedJob(null); }}
+              onClick={() => { setActiveTab('credits'); setSelectedJob(null); setSidebarOpen(false); }}
             >
               <span className="sidebar-icon">💳</span> Credits & usage
             </button>
 
-            <button className="sidebar-link">
-              <span className="sidebar-icon">🤝</span> Refer & Earn
-            </button>
-
-            <button className="sidebar-link">
-              <span className="sidebar-icon">❓</span> Help & Support
-            </button>
-
-            <Link to="/" className="sidebar-link portal-switch-link">
+            <Link to="/" className="sidebar-link portal-switch-link" onClick={() => setSidebarOpen(false)}>
               <span className="sidebar-icon">🌐</span> Candidate Portal
             </Link>
           </nav>
@@ -258,7 +265,17 @@ export default function Employer() {
           {activeTab === 'jobs' && selectedJob === null && (
             <div className="all-jobs-container">
               <div className="all-jobs-header">
-                <h2>All Jobs ({allJobsList.length})</h2>
+                <div className="all-jobs-title-wrap">
+                  <button
+                    className="employer-sidebar-hamburger"
+                    onClick={() => setSidebarOpen(true)}
+                    aria-label="Open sidebar menu"
+                    title="Menu"
+                  >
+                    <span>☰</span>
+                  </button>
+                  <h2>All Jobs ({allJobsList.length})</h2>
+                </div>
                 <button className="btn-post-job" onClick={() => setShowPostJobModal(true)}>
                   + Post a new job
                 </button>
@@ -318,9 +335,18 @@ export default function Employer() {
 
               {/* Back & Job Title Bar */}
               <div className="job-details-header-bar">
-                <button className="btn-back" onClick={() => setSelectedJob(null)}>
-                  ← Back to All Jobs
-                </button>
+                <div className="job-details-nav-wrap">
+                  <button
+                    className="employer-sidebar-hamburger"
+                    onClick={() => setSidebarOpen(true)}
+                    aria-label="Open sidebar menu"
+                  >
+                    <span>☰</span>
+                  </button>
+                  <button className="btn-back" onClick={() => setSelectedJob(null)}>
+                    ← Back to All Jobs
+                  </button>
+                </div>
                 <div className="job-title-meta-wrap">
                   <h2 className="job-detail-title">{selectedJob.title}</h2>
                   <span className="status-pill active">Active</span>
@@ -472,7 +498,16 @@ export default function Employer() {
           ══════════════════════════════════════════════════════════ */}
           {activeTab === 'database' && (
             <div className="all-jobs-container">
-              <h2>Database Matches & Applications ({applications.length})</h2>
+              <div className="all-jobs-title-wrap" style={{ marginBottom: '1.25rem' }}>
+                <button
+                  className="employer-sidebar-hamburger"
+                  onClick={() => setSidebarOpen(true)}
+                  aria-label="Open sidebar menu"
+                >
+                  <span>☰</span>
+                </button>
+                <h2>Database Matches & Applications ({applications.length})</h2>
+              </div>
               <div className="candidate-cards-list" style={{ marginTop: '1rem' }}>
                 {applications.map(app => (
                   <div key={app.id} className="candidate-card">
@@ -505,19 +540,207 @@ export default function Employer() {
           )}
 
           {/* ══════════════════════════════════════════════════════════
-              VIEW D: REPORTS & CREDITS
+              VIEW D: REPORTS & ANALYTICS
           ══════════════════════════════════════════════════════════ */}
           {activeTab === 'reports' && (
             <div className="all-jobs-container">
-              <h2>Employer Reports & Analytics</h2>
-              <p style={{ color: '#64748b', marginTop: '8px' }}>Total Applications: {applications.length} | Active Openings: {allJobsList.length}</p>
+              <div className="reports-header-row">
+                <div className="all-jobs-title-wrap">
+                  <button
+                    className="employer-sidebar-hamburger"
+                    onClick={() => setSidebarOpen(true)}
+                    aria-label="Open sidebar menu"
+                  >
+                    <span>☰</span>
+                  </button>
+                  <h2>Employer Reports & Analytics</h2>
+                </div>
+                <div className="reports-action-group">
+                  <select className="reports-time-select" defaultValue="30">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30">Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                  </select>
+                  <button className="btn-action-primary" onClick={() => alert('Downloading Employer Performance Report...')}>
+                    📥 Export Report
+                  </button>
+                </div>
+              </div>
+
+              {/* KPI Stat Cards Grid */}
+              <div className="reports-kpi-grid">
+                <div className="kpi-card">
+                  <div className="kpi-icon-wrap" style={{ background: '#e0f2fe', color: '#0284c7' }}>👥</div>
+                  <div className="kpi-content">
+                    <span className="kpi-label">Total Applications</span>
+                    <div className="kpi-value-row">
+                      <span className="kpi-value">{applications.length}</span>
+                      <span className="kpi-trend positive">+18% ↑</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="kpi-card">
+                  <div className="kpi-icon-wrap" style={{ background: '#dcfce7', color: '#16a34a' }}>💼</div>
+                  <div className="kpi-content">
+                    <span className="kpi-label">Active Job Openings</span>
+                    <div className="kpi-value-row">
+                      <span className="kpi-value">{allJobsList.length}</span>
+                      <span className="kpi-sub">8 Published</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="kpi-card">
+                  <div className="kpi-icon-wrap" style={{ background: '#fef3c7', color: '#d97706' }}>⭐</div>
+                  <div className="kpi-content">
+                    <span className="kpi-label">Shortlisted Candidates</span>
+                    <div className="kpi-value-row">
+                      <span className="kpi-value">
+                        {applications.filter(a => a.status === 'Shortlisted' || a.status === 'Selected').length}
+                      </span>
+                      <span className="kpi-sub">Top Tier</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="kpi-card">
+                  <div className="kpi-icon-wrap" style={{ background: '#f3e8ff', color: '#9333ea' }}>⚡</div>
+                  <div className="kpi-content">
+                    <span className="kpi-label">Avg. Response Time</span>
+                    <div className="kpi-value-row">
+                      <span className="kpi-value">24 hrs</span>
+                      <span className="kpi-trend positive">Top 5%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hiring Funnel & Analytics Grid */}
+              <div className="reports-grid-2">
+
+                {/* Hiring Funnel Breakdown */}
+                <div className="reports-panel">
+                  <h3 className="reports-panel-title">🎯 Hiring Conversion Funnel</h3>
+                  <div className="funnel-list">
+                    {[
+                      { label: 'Applications Received', count: applications.length, percent: 100, color: '#0284c7' },
+                      { label: 'Under Review', count: applications.filter(a => a.status === 'Applied' || a.status === 'Under Review').length, percent: 75, color: '#0f766e' },
+                      { label: 'Shortlisted', count: applications.filter(a => a.status === 'Shortlisted').length, percent: 35, color: '#d97706' },
+                      { label: 'Selected / Hired', count: applications.filter(a => a.status === 'Selected').length, percent: 15, color: '#16a34a' },
+                      { label: 'Rejected', count: applications.filter(a => a.status === 'Rejected').length, percent: 10, color: '#dc2626' },
+                    ].map(f => (
+                      <div key={f.label} className="funnel-item">
+                        <div className="funnel-item-header">
+                          <span className="funnel-label">{f.label}</span>
+                          <span className="funnel-count">{f.count} candidates ({f.percent}%)</span>
+                        </div>
+                        <div className="funnel-bar-track">
+                          <div
+                            className="funnel-bar-fill"
+                            style={{ width: `${Math.max(f.percent, 8)}%`, background: f.color }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Top Job Openings Breakdown */}
+                <div className="reports-panel">
+                  <h3 className="reports-panel-title">📈 Top Performing Openings</h3>
+                  <div className="top-jobs-list">
+                    {allJobsList.slice(0, 4).map(j => {
+                      const count = applications.filter(a => a.jobId === j.id || a.jobTitle === j.title).length;
+                      return (
+                        <div key={j.id} className="top-job-item">
+                          <div className="top-job-info">
+                            <div className="top-job-title">{j.title}</div>
+                            <div className="top-job-sub">{j.location} · {j.category || j.department}</div>
+                          </div>
+                          <div className="top-job-metric">
+                            <span className="metric-badge">{count} Applicants</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
             </div>
           )}
 
+          {/* ══════════════════════════════════════════════════════════
+              VIEW E: CREDITS & USAGE
+          ══════════════════════════════════════════════════════════ */}
           {activeTab === 'credits' && (
             <div className="all-jobs-container">
-              <h2>Credits & Usage</h2>
-              <p style={{ color: '#64748b', marginTop: '8px' }}>You have <strong>100 credits</strong> remaining for candidate contacts.</p>
+              <div className="all-jobs-title-wrap" style={{ marginBottom: '1.25rem' }}>
+                <button
+                  className="employer-sidebar-hamburger"
+                  onClick={() => setSidebarOpen(true)}
+                  aria-label="Open sidebar menu"
+                >
+                  <span>☰</span>
+                </button>
+                <h2>Credits & Billing Dashboard</h2>
+              </div>
+
+              {/* Credit Balance Box */}
+              <div className="credit-balance-card">
+                <div className="balance-main">
+                  <div>
+                    <span className="balance-title">Available Candidate Credits</span>
+                    <div className="balance-amount">100 <span>Credits</span></div>
+                    <p className="balance-sub">Use credits to view candidate contact info and download full resumes.</p>
+                  </div>
+                  <button className="btn-post-job" onClick={() => showToast('Redirecting to recharge gateway...')}>
+                    + Buy Extra Credits
+                  </button>
+                </div>
+              </div>
+
+              {/* Recharge Packages Grid */}
+              <div className="credit-packages-grid">
+                <div className="package-card">
+                  <div className="package-name">Starter Pack</div>
+                  <div className="package-price">₹999</div>
+                  <div className="package-credits">50 Candidate Credits</div>
+                  <ul className="package-features">
+                    <li>✓ Direct Resume Access</li>
+                    <li>✓ Candidate Contact Details</li>
+                    <li>✓ Valid for 90 Days</li>
+                  </ul>
+                  <button className="btn-action-outline" style={{ width: '100%', marginTop: '1rem' }}>Select Pack</button>
+                </div>
+
+                <div className="package-card featured">
+                  <div className="featured-badge">MOST POPULAR</div>
+                  <div className="package-name">Growth Pack</div>
+                  <div className="package-price">₹3,999</div>
+                  <div className="package-credits">250 Candidate Credits</div>
+                  <ul className="package-features">
+                    <li>✓ Unlimited Database Search</li>
+                    <li>✓ WhatsApp Direct Contact</li>
+                    <li>✓ Priority Resume Download</li>
+                    <li>✓ Valid for 365 Days</li>
+                  </ul>
+                  <button className="btn-action-primary" style={{ width: '100%', marginTop: '1rem' }}>Buy Growth Pack</button>
+                </div>
+
+                <div className="package-card">
+                  <div className="package-name">Enterprise Pack</div>
+                  <div className="package-price">₹9,999 <span style={{ fontSize: '12px', fontWeight: 400 }}>/mo</span></div>
+                  <div className="package-credits">Unlimited Credits</div>
+                  <ul className="package-features">
+                    <li>✓ Dedicated Account Manager</li>
+                    <li>✓ Custom Assessment Filters</li>
+                    <li>✓ Guaranteed Candidates</li>
+                  </ul>
+                  <button className="btn-action-outline" style={{ width: '100%', marginTop: '1rem' }}>Contact Sales</button>
+                </div>
+              </div>
             </div>
           )}
 

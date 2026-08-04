@@ -199,16 +199,40 @@
   gap: var(--space-4);
 }
 
-/* ── Password Field ── */
+/* ── Password Field & Input Icon Styling ── */
+.input-with-icon,
 .password-field {
   position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  z-index: 2;
+  line-height: 1;
+}
+
+.input-with-icon .form-input {
+  padding-left: 42px;
+  padding-right: 3rem;
+  width: 100%;
 }
 
 .password-field .form-input {
   padding-right: 3rem;
+  width: 100%;
 }
 
-.password-toggle {
+.password-toggle,
+.password-toggle-btn {
   position: absolute;
   right: 12px;
   top: 50%;
@@ -217,14 +241,19 @@
   border: none;
   cursor: pointer;
   color: var(--color-text-muted);
-  font-size: var(--text-base);
-  padding: 4px;
+  font-size: 16px;
+  padding: 4px 6px;
   border-radius: var(--radius-sm);
-  transition: color var(--transition-fast);
+  transition: all var(--transition-fast);
   line-height: 1;
+  z-index: 2;
 }
 
-.password-toggle:hover { color: var(--color-navy); }
+.password-toggle:hover,
+.password-toggle-btn:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-navy);
+}
 
 /* ── Password Strength ── */
 .password-strength {

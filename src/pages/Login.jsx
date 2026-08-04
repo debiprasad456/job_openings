@@ -41,16 +41,19 @@ export default function Login() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email, password: form.password }),
+        body: JSON.stringify({ email: form.email, password: form.password, targetPortal: 'candidate' }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         throw new Error(data?.error || `Server error (${res.status}). Please ensure backend server is running.`);
       }
+
+      if (data.user?.role === 'employer' || data.user?.role === 'admin') {
+        throw new Error('This is an Employer account. Please sign in via the Employer Portal.');
+      }
+
       login(data.user, data.token);
-      const targetPath = (data.user?.role === 'employer' || data.user?.role === 'admin')
-        ? '/employer'
-        : (returnTo && returnTo !== '/' ? returnTo : '/');
+      const targetPath = (returnTo && returnTo !== '/' ? returnTo : '/');
       navigate(targetPath, { replace: true });
     } catch (err) {
       setApiError(err.message);
@@ -131,18 +134,21 @@ export default function Login() {
               {/* Email */}
               <div className="form-group" style={{ marginBottom: 'var(--space-5)' }}>
                 <label className="form-label required" htmlFor="login-email">Email Address</label>
-                <input
-                  id="login-email"
-                  type="email"
-                  className={`form-input${errors.email ? ' error' : ''}`}
-                  placeholder="you@example.com"
-                  value={form.email}
-                  onChange={e => set('email', e.target.value)}
-                  autoComplete="email"
-                  autoFocus
-                  aria-describedby={errors.email ? 'email-error' : undefined}
-                  style={{ borderColor: errors.email ? 'var(--color-error)' : '' }}
-                />
+                <div className="input-with-icon">
+                  <span className="input-icon" aria-hidden="true">✉️</span>
+                  <input
+                    id="login-email"
+                    type="email"
+                    className={`form-input${errors.email ? ' error' : ''}`}
+                    placeholder="Enter your email"
+                    value={form.email}
+                    onChange={e => set('email', e.target.value)}
+                    autoComplete="email"
+                    autoFocus
+                    aria-describedby={errors.email ? 'email-error' : undefined}
+                    style={{ borderColor: errors.email ? 'var(--color-error)' : '' }}
+                  />
+                </div>
                 {errors.email && <span id="email-error" className="form-error">{errors.email}</span>}
               </div>
 
@@ -152,7 +158,8 @@ export default function Login() {
                   <label className="form-label required" htmlFor="login-password" style={{ marginBottom: 0 }}>Password</label>
                   <Link to="/forgot-password" className="forgot-link" tabIndex={-1}>Forgot password?</Link>
                 </div>
-                <div className="password-field">
+                <div className="input-with-icon">
+                  <span className="input-icon" aria-hidden="true">🔒</span>
                   <input
                     id="login-password"
                     type={showPwd ? 'text' : 'password'}
@@ -166,12 +173,12 @@ export default function Login() {
                   />
                   <button
                     type="button"
-                    className="password-toggle"
+                    className="password-toggle-btn"
                     onClick={() => setShowPwd(!showPwd)}
                     aria-label={showPwd ? 'Hide password' : 'Show password'}
                     tabIndex={-1}
                   >
-                    {showPwd ? '🙈' : '👁️'}
+                    {showPwd ? '👁️' : '🙈'}
                   </button>
                 </div>
                 {errors.password && <span id="pwd-error" className="form-error">{errors.password}</span>}

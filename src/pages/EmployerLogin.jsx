@@ -7,7 +7,7 @@ export default function EmployerLogin() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ email: 'employer@diversesolutions.com', password: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [showPwd, setShowPwd] = useState(false);
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
@@ -39,12 +39,17 @@ export default function EmployerLogin() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email, password: form.password }),
+        body: JSON.stringify({ email: form.email, password: form.password, targetPortal: 'employer' }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         throw new Error(data?.error || `Server error (${res.status}). Please ensure backend server is running.`);
       }
+
+      if (data.user?.role !== 'employer' && data.user?.role !== 'admin') {
+        throw new Error('This account is registered as a Candidate. Please log in using Candidate Login.');
+      }
+
       login(data.user, data.token);
       navigate('/employer', { replace: true });
     } catch (err) {
@@ -106,7 +111,7 @@ export default function EmployerLogin() {
 
           <div className="auth-form-header">
             <span className="auth-badge" style={{ background: '#e0f2fe', color: '#0369a1' }}>💼 Recruiter & Employer Access</span>
-            <h1 className="auth-form-title">Employer Login 🏢</h1>
+            <h1 className="auth-form-title">Employer Login</h1>
             <p className="auth-form-sub">
               Sign in to manage your active job postings and candidate applications.
             </p>
@@ -121,7 +126,7 @@ export default function EmployerLogin() {
           <form onSubmit={handleSubmit} noValidate>
 
             {/* Email */}
-            <div className="form-group">
+            <div className="form-group" style={{ marginBottom: 'var(--space-5)' }}>
               <label className="form-label required" htmlFor="emp-email">Employer Email Address</label>
               <div className="input-with-icon">
                 <span className="input-icon" aria-hidden="true">✉️</span>
@@ -129,7 +134,7 @@ export default function EmployerLogin() {
                   id="emp-email"
                   type="email"
                   className={`form-input${errors.email ? ' error' : ''}`}
-                  placeholder="admin@diversesolutions.com"
+                  placeholder="Enter your email"
                   value={form.email}
                   onChange={e => set('email', e.target.value)}
                   autoComplete="email"
@@ -139,9 +144,9 @@ export default function EmployerLogin() {
             </div>
 
             {/* Password */}
-            <div className="form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label className="form-label required" htmlFor="emp-password">Password</label>
+            <div className="form-group" style={{ marginBottom: 'var(--space-5)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-1)' }}>
+                <label className="form-label required" htmlFor="emp-password" style={{ marginBottom: 0 }}>Password</label>
                 <Link to="/forgot-password" className="auth-forgot-link">Forgot password?</Link>
               </div>
               <div className="input-with-icon">
@@ -172,12 +177,12 @@ export default function EmployerLogin() {
               type="submit"
               className="btn btn-primary btn-full btn-lg"
               disabled={loading}
-              style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', marginTop: '1rem' }}
+              style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', marginTop: '0.5rem' }}
             >
               {loading ? (
                 <><span className="spinner-sm" aria-hidden="true" /> Signing in to Employer Portal...</>
               ) : (
-                '💼 Sign In to Employer Portal'
+                'Sign In to Employer Portal'
               )}
             </button>
 

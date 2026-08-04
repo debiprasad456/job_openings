@@ -45,12 +45,20 @@ export function mockRegister({ name, email, phone, password }) {
   return { user: safeUser, token };
 }
 
-export function mockLogin({ email, password }) {
+export function mockLogin({ email, password, targetPortal }) {
   const users = getUsers();
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
 
   if (!user) throw new Error('No account found with this email.');
   if (atob(user.passwordHash) !== password) throw new Error('Incorrect password. Please try again.');
+
+  const isEmployerRole = user.role === 'employer' || user.role === 'admin';
+  if (targetPortal === 'candidate' && isEmployerRole) {
+    throw new Error('This is an Employer account. Please sign in via the Employer Portal.');
+  }
+  if (targetPortal === 'employer' && !isEmployerRole) {
+    throw new Error('This is a Candidate account. Please sign in via Candidate Login.');
+  }
 
   const { passwordHash, ...safeUser } = user;
   const token = makeToken(safeUser);

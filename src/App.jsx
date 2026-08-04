@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -44,6 +44,9 @@ function GuestRoute({ children }) {
 // ── App Shell ──
 function AppShell() {
   const { user, logout } = useAuth();
+  const location = useLocation();
+
+  const hideFooter = ['/login', '/employer-login'].includes(location.pathname);
 
   return (
     <>
@@ -94,7 +97,7 @@ function AppShell() {
           </div>
         } />
       </Routes>
-      <Footer />
+      {!hideFooter && <Footer />}
       <WhatsAppButton />
     </>
   );

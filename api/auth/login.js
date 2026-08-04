@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { email, password } = req.body;
+    const { email, password, targetPortal } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required.' });
@@ -68,6 +68,21 @@ export default async function handler(req, res) {
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) {
       return res.status(401).json({ error: 'Incorrect password. Please try again.' });
+    }
+
+    // ── Portal Role Enforcement ──
+    const isEmployerRole = user.role === 'employer' || user.role === 'admin';
+
+    if (targetPortal === 'candidate' && isEmployerRole) {
+      return res.status(403).json({
+        error: 'This is an Employer account. Please sign in via the Employer Portal.'
+      });
+    }
+
+    if (targetPortal === 'employer' && !isEmployerRole) {
+      return res.status(403).json({
+        error: 'This is a Candidate account. Please sign in via the Candidate Login.'
+      });
     }
 
     const safeUser = {
