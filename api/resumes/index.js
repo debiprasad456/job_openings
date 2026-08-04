@@ -93,30 +93,44 @@ export default async function handler(req, res) {
       return res.status(200).json(allResumes);
     }
 
-    // POST — Employer upload new student resume
+    // POST — Employer upload student resume(s) (supports single or batch multi-file array)
     if (req.method === 'POST') {
-      const { name, email, phone, department, resumeUrl, resumeName, notes } = req.body;
-      if (!name || !email || !resumeUrl) {
-        return res.status(400).json({ error: 'Candidate name, email, and resume file are required.' });
+      const items = Array.isArray(req.body) ? req.body : [req.body];
+      if (items.length === 0) {
+        return res.status(400).json({ error: 'At least one resume file is required.' });
       }
 
-      const doc = {
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
-        phone: phone ? phone.trim() : '',
-        department: department ? department.trim() : 'MBA / Graduate',
-        resumeUrl: resumeUrl,
-        resumeName: resumeName || `${name.trim().replace(/\s+/g, '_')}_Resume.pdf`,
-        notes: notes ? notes.trim() : '',
-        source: 'uploaded_by_employer',
-        uploadedBy: currentUser.email,
-        uploadedAt: new Date(),
-      };
+      const docsToInsert = [];
+      for (const item of items) {
+        const { name, email, phone, department, resumeUrl, resumeName, notes } = item;
+        if (!resumeUrl) continue;
 
-      const result = await resumesCollection.insertOne(doc);
+        const cleanFileName = (resumeName || 'Resume.pdf').replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+        const derivedName = name && name.trim() ? name.trim() : (cleanFileName || 'Uploaded Resume');
+
+        docsToInsert.push({
+          name: derivedName,
+          email: email ? email.toLowerCase().trim() : '—',
+          phone: phone ? phone.trim() : '—',
+          department: department ? department.trim() : 'Uploaded Resume',
+          resumeUrl: resumeUrl,
+          resumeName: resumeName || 'Resume.pdf',
+          notes: notes ? notes.trim() : '',
+          source: 'uploaded_by_employer',
+          uploadedBy: currentUser.email,
+          uploadedAt: new Date(),
+        });
+      }
+
+      if (docsToInsert.length === 0) {
+        return res.status(400).json({ error: 'No valid resume files provided.' });
+      }
+
+      const result = await resumesCollection.insertMany(docsToInsert);
       return res.status(201).json({
         success: true,
-        resume: { id: result.insertedId.toString(), ...doc, canDelete: true }
+        count: docsToInsert.length,
+        insertedIds: result.insertedIds,
       });
     }
 

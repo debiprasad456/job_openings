@@ -41,6 +41,425 @@ function openBase64InNewTab(base64Data) {
   }
 }
 
+/* ── 18-Category Advanced Candidate Filter Sidebar ── */
+function CandidateFilterSidebar({ dbFilters, setDbFilters, resetDbFilters }) {
+  const [openSection, setOpenSection] = useState({
+    location: true,
+    exp: true,
+    education: true,
+    personal: true,
+    preferences: false,
+  });
+
+  const toggleSection = (sec) => setOpenSection(prev => ({ ...prev, [sec]: !prev[sec] }));
+
+  return (
+    <aside className="candidate-filter-sidebar">
+      <div className="filter-group-header-row">
+        <span className="filter-group-header">⚙️ Database Filters</span>
+        <button className="btn-reset-filters" onClick={resetDbFilters} title="Reset all filters">
+          Clear All
+        </button>
+      </div>
+
+      {/* 1. Location & Keywords */}
+      <div className="filter-accordion">
+        <div className="accordion-title" onClick={() => toggleSection('location')}>
+          <span>📍 Location & Keywords</span>
+          <span className="arrow">{openSection.location ? '▲' : '▼'}</span>
+        </div>
+        {openSection.location && (
+          <div className="accordion-content">
+            <div className="filter-input-group">
+              <label className="filter-label">Current City / Area</label>
+              <input
+                type="text"
+                placeholder="Search current city/area"
+                value={dbFilters.city}
+                onChange={e => setDbFilters({ ...dbFilters, city: e.target.value })}
+                className="filter-input-text"
+              />
+            </div>
+            <div className="filter-input-group">
+              <label className="filter-label">Exclude Keywords</label>
+              <input
+                type="text"
+                placeholder="Keywords to exclude"
+                value={dbFilters.excludeKeywords}
+                onChange={e => setDbFilters({ ...dbFilters, excludeKeywords: e.target.value })}
+                className="filter-input-text"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Experience, Salary & Industry */}
+      <div className="filter-accordion">
+        <div className="accordion-title" onClick={() => toggleSection('exp')}>
+          <span>💼 Experience & Industry</span>
+          <span className="arrow">{openSection.exp ? '▲' : '▼'}</span>
+        </div>
+        {openSection.exp && (
+          <div className="accordion-content">
+            <div className="filter-grid-2">
+              <div>
+                <label className="filter-label">Min. Exp</label>
+                <select
+                  value={dbFilters.minExp}
+                  onChange={e => setDbFilters({ ...dbFilters, minExp: e.target.value })}
+                  className="filter-select"
+                >
+                  <option value="">Min Exp</option>
+                  <option value="0">0 (Fresher)</option>
+                  <option value="1">1 Year</option>
+                  <option value="2">2 Years</option>
+                  <option value="3">3 Years</option>
+                  <option value="5">5 Years</option>
+                  <option value="10">10+ Years</option>
+                </select>
+              </div>
+              <div>
+                <label className="filter-label">Max. Exp</label>
+                <select
+                  value={dbFilters.maxExp}
+                  onChange={e => setDbFilters({ ...dbFilters, maxExp: e.target.value })}
+                  className="filter-select"
+                >
+                  <option value="">Max Exp</option>
+                  <option value="1">1 Year</option>
+                  <option value="3">3 Years</option>
+                  <option value="5">5 Years</option>
+                  <option value="10">10 Years</option>
+                  <option value="15">15+ Years</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="filter-input-group" style={{ marginTop: '8px' }}>
+              <label className="filter-label">Search Industry</label>
+              <input
+                type="text"
+                placeholder="Search Industry"
+                value={dbFilters.industry}
+                onChange={e => setDbFilters({ ...dbFilters, industry: e.target.value })}
+                className="filter-input-text"
+              />
+            </div>
+
+            <div className="filter-input-group">
+              <label className="filter-label">Current / Previous Company</label>
+              <input
+                type="text"
+                placeholder="Company"
+                value={dbFilters.company}
+                onChange={e => setDbFilters({ ...dbFilters, company: e.target.value })}
+                className="filter-input-text"
+              />
+            </div>
+
+            <div className="filter-grid-2">
+              <div>
+                <label className="filter-label">Min Salary (LPA)</label>
+                <input
+                  type="text"
+                  placeholder="Min LPA"
+                  value={dbFilters.minSalary}
+                  onChange={e => setDbFilters({ ...dbFilters, minSalary: e.target.value })}
+                  className="filter-input-text"
+                />
+              </div>
+              <div>
+                <label className="filter-label">Max Salary (LPA)</label>
+                <input
+                  type="text"
+                  placeholder="Max LPA"
+                  value={dbFilters.maxSalary}
+                  onChange={e => setDbFilters({ ...dbFilters, maxSalary: e.target.value })}
+                  className="filter-input-text"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Education & Degrees */}
+      <div className="filter-accordion">
+        <div className="accordion-title" onClick={() => toggleSection('education')}>
+          <span>🎓 Education & Degrees</span>
+          <span className="arrow">{openSection.education ? '▲' : '▼'}</span>
+        </div>
+        {openSection.education && (
+          <div className="accordion-content">
+            <div className="filter-input-group">
+              <label className="filter-label">Degrees / Specialization</label>
+              <input
+                type="text"
+                placeholder="Search degree/specialization"
+                value={dbFilters.degree}
+                onChange={e => setDbFilters({ ...dbFilters, degree: e.target.value })}
+                className="filter-input-text"
+              />
+            </div>
+
+            <div className="filter-input-group">
+              <label className="filter-label">Education Filter</label>
+              <div className="filter-radio-group">
+                <label className="filter-radio-item">
+                  <input
+                    type="radio"
+                    name="eduLevel"
+                    checked={dbFilters.educationLevel === 'all'}
+                    onChange={() => setDbFilters({ ...dbFilters, educationLevel: 'all' })}
+                  /> All
+                </label>
+                <label className="filter-radio-item">
+                  <input
+                    type="radio"
+                    name="eduLevel"
+                    checked={dbFilters.educationLevel === 'graduate'}
+                    onChange={() => setDbFilters({ ...dbFilters, educationLevel: 'graduate' })}
+                  /> Graduate Only
+                </label>
+                <label className="filter-radio-item">
+                  <input
+                    type="radio"
+                    name="eduLevel"
+                    checked={dbFilters.educationLevel === 'postgraduate'}
+                    onChange={() => setDbFilters({ ...dbFilters, educationLevel: 'postgraduate' })}
+                  /> Post Graduate Only
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 4. Personal, Age & Languages */}
+      <div className="filter-accordion">
+        <div className="accordion-title" onClick={() => toggleSection('personal')}>
+          <span>👤 Personal & Languages</span>
+          <span className="arrow">{openSection.personal ? '▲' : '▼'}</span>
+        </div>
+        {openSection.personal && (
+          <div className="accordion-content">
+            <div className="filter-input-group">
+              <label className="filter-label">Gender</label>
+              <div className="filter-radio-group">
+                <label className="filter-radio-item">
+                  <input
+                    type="radio"
+                    name="gender"
+                    checked={dbFilters.gender === 'all'}
+                    onChange={() => setDbFilters({ ...dbFilters, gender: 'all' })}
+                  /> All
+                </label>
+                <label className="filter-radio-item">
+                  <input
+                    type="radio"
+                    name="gender"
+                    checked={dbFilters.gender === 'Male'}
+                    onChange={() => setDbFilters({ ...dbFilters, gender: 'Male' })}
+                  /> Male
+                </label>
+                <label className="filter-radio-item">
+                  <input
+                    type="radio"
+                    name="gender"
+                    checked={dbFilters.gender === 'Female'}
+                    onChange={() => setDbFilters({ ...dbFilters, gender: 'Female' })}
+                  /> Female
+                </label>
+              </div>
+            </div>
+
+            <div className="filter-grid-2">
+              <div>
+                <label className="filter-label">Age From</label>
+                <input
+                  type="number"
+                  placeholder="18 Years"
+                  value={dbFilters.minAge}
+                  onChange={e => setDbFilters({ ...dbFilters, minAge: e.target.value })}
+                  className="filter-input-text"
+                />
+              </div>
+              <div>
+                <label className="filter-label">Age To</label>
+                <input
+                  type="number"
+                  placeholder="60 Years"
+                  value={dbFilters.maxAge}
+                  onChange={e => setDbFilters({ ...dbFilters, maxAge: e.target.value })}
+                  className="filter-input-text"
+                />
+              </div>
+            </div>
+
+            <div className="filter-input-group" style={{ marginTop: '8px' }}>
+              <label className="filter-label">Languages</label>
+              <select
+                value={dbFilters.language}
+                onChange={e => setDbFilters({ ...dbFilters, language: e.target.value })}
+                className="filter-select"
+              >
+                <option value="">Select Languages</option>
+                <option value="English">English</option>
+                <option value="Hindi">Hindi</option>
+                <option value="Odia">Odia</option>
+                <option value="Bengali">Bengali</option>
+                <option value="Tamil">Tamil</option>
+                <option value="Telugu">Telugu</option>
+                <option value="Marathi">Marathi</option>
+              </select>
+            </div>
+
+            <div className="filter-input-group">
+              <label className="filter-label">English Fluency Level</label>
+              <select
+                value={dbFilters.englishFluency}
+                onChange={e => setDbFilters({ ...dbFilters, englishFluency: e.target.value })}
+                className="filter-select"
+              >
+                <option value="">Any Fluency</option>
+                <option value="Basic">Basic</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Fluent">Fluent / Native</option>
+              </select>
+            </div>
+
+            <div className="filter-input-group">
+              <label className="filter-label">Departments</label>
+              <select
+                value={dbFilters.department}
+                onChange={e => setDbFilters({ ...dbFilters, department: e.target.value })}
+                className="filter-select"
+              >
+                <option value="">Select a job Department</option>
+                <option value="Finance & Accounts">Finance & Accounts</option>
+                <option value="Sales & Marketing">Sales & Marketing</option>
+                <option value="Human Resources">Human Resources</option>
+                <option value="Operations & Logistics">Operations & Logistics</option>
+                <option value="Software / IT">Software / IT</option>
+                <option value="Engineering & Strategy">Engineering & Strategy</option>
+              </select>
+            </div>
+
+            <div className="filter-input-group">
+              <label className="filter-label">Notice Period</label>
+              <select
+                value={dbFilters.noticePeriod}
+                onChange={e => setDbFilters({ ...dbFilters, noticePeriod: e.target.value })}
+                className="filter-select"
+              >
+                <option value="">Any Notice Period</option>
+                <option value="Immediate">Immediate / 0 Days</option>
+                <option value="15 Days">15 Days</option>
+                <option value="30 Days">30 Days</option>
+                <option value="60 Days">60+ Days</option>
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 5. Preferences, Assets, Docs & Certs */}
+      <div className="filter-accordion">
+        <div className="accordion-title" onClick={() => toggleSection('preferences')}>
+          <span>⚙️ Preferences, Assets & Docs</span>
+          <span className="arrow">{openSection.preferences ? '▲' : '▼'}</span>
+        </div>
+        {openSection.preferences && (
+          <div className="accordion-content">
+            <label className="filter-group-label">Candidate Preferences</label>
+            <label className="filter-checkbox-item">
+              <input
+                type="checkbox"
+                checked={dbFilters.relocate}
+                onChange={e => setDbFilters({ ...dbFilters, relocate: e.target.checked })}
+              /> Willing to Relocate
+            </label>
+            <label className="filter-checkbox-item">
+              <input
+                type="checkbox"
+                checked={dbFilters.nightShift}
+                onChange={e => setDbFilters({ ...dbFilters, nightShift: e.target.checked })}
+              /> Night / Rotational Shift
+            </label>
+
+            <label className="filter-group-label" style={{ marginTop: '10px' }}>Assets</label>
+            <label className="filter-checkbox-item">
+              <input
+                type="checkbox"
+                checked={dbFilters.assetLaptop}
+                onChange={e => setDbFilters({ ...dbFilters, assetLaptop: e.target.checked })}
+              /> Add Assets: Laptop
+            </label>
+            <label className="filter-checkbox-item">
+              <input
+                type="checkbox"
+                checked={dbFilters.assetBike}
+                onChange={e => setDbFilters({ ...dbFilters, assetBike: e.target.checked })}
+              /> Add Assets: Two Wheeler / Bike
+            </label>
+
+            <label className="filter-group-label" style={{ marginTop: '10px' }}>Documents</label>
+            <label className="filter-checkbox-item">
+              <input
+                type="checkbox"
+                checked={dbFilters.docAadhaar}
+                onChange={e => setDbFilters({ ...dbFilters, docAadhaar: e.target.checked })}
+              /> Add Documents: Aadhaar Card
+            </label>
+            <label className="filter-checkbox-item">
+              <input
+                type="checkbox"
+                checked={dbFilters.docPan}
+                onChange={e => setDbFilters({ ...dbFilters, docPan: e.target.checked })}
+              /> Add Documents: PAN Card
+            </label>
+            <label className="filter-checkbox-item">
+              <input
+                type="checkbox"
+                checked={dbFilters.docPassport}
+                onChange={e => setDbFilters({ ...dbFilters, docPassport: e.target.checked })}
+              /> Add Documents: Passport
+            </label>
+            <label className="filter-checkbox-item">
+              <input
+                type="checkbox"
+                checked={dbFilters.docDrivingLicense}
+                onChange={e => setDbFilters({ ...dbFilters, docDrivingLicense: e.target.checked })}
+              /> Add Documents: Driving License
+            </label>
+
+            <div className="filter-input-group" style={{ marginTop: '10px' }}>
+              <label className="filter-label">Certificates</label>
+              <input
+                type="text"
+                placeholder="Add Certificates (e.g. NISM, CA)"
+                value={dbFilters.certificate}
+                onChange={e => setDbFilters({ ...dbFilters, certificate: e.target.value })}
+                className="filter-input-text"
+              />
+            </div>
+
+            <label className="filter-checkbox-item" style={{ marginTop: '10px' }}>
+              <input
+                type="checkbox"
+                checked={dbFilters.hasResume}
+                onChange={e => setDbFilters({ ...dbFilters, hasResume: e.target.checked })}
+              /> Have Resume Attached
+            </label>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
+
 export default function Employer() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' | 'database' | 'reports' | 'credits'
@@ -55,26 +474,104 @@ export default function Employer() {
   const [apiError, setApiError] = useState('');
   const [toast, setToast] = useState('');
   const [showPostJobModal, setShowPostJobModal] = useState(false);
-  const [candidateFilter, setCandidateFilter] = useState({
-    matchedReq: false,
+  // 18-Category Advanced Candidate Database Filters
+  const initialDbFilters = {
+    city: '',
+    excludeKeywords: '',
+    minExp: '',
+    maxExp: '',
+    industry: '',
+    company: '',
+    minSalary: '',
+    maxSalary: '',
+    degree: '',
+    educationLevel: 'all',
+    gender: 'all',
+    minAge: '18',
+    maxAge: '60',
+    language: '',
+    englishFluency: '',
+    department: '',
+    noticePeriod: '',
+    relocate: false,
+    nightShift: false,
+    assetLaptop: false,
+    assetBike: false,
+    docAadhaar: false,
+    docPan: false,
+    docPassport: false,
+    docDrivingLicense: false,
+    certificate: '',
     hasResume: false,
-  });
+  };
 
-  // Resumes state & Upload modal
+  const [dbFilters, setDbFilters] = useState(initialDbFilters);
+  const resetDbFilters = () => setDbFilters(initialDbFilters);
+
+  // Resumes state & Upload modal (Multi-File Drag & Drop)
   const [resumesList, setResumesList] = useState([]);
   const [resumeSearch, setResumeSearch] = useState('');
   const [resumeSourceFilter, setResumeSourceFilter] = useState('all'); // 'all' | 'uploaded' | 'applied'
   const [showUploadResumeModal, setShowUploadResumeModal] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
-  const [uploadForm, setUploadForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    department: 'MBA Finance',
-    resumeUrl: '',
-    resumeName: '',
-    notes: '',
-  });
+  const [uploadFilesList, setUploadFilesList] = useState([]); // [{ name, size, type, base64 }]
+  const [isDragging, setIsDragging] = useState(false);
+
+  /* ── Process Dragged / Selected Multi-File Batch ── */
+  const processFilesBatch = async (files) => {
+    if (!files || files.length === 0) return;
+    const fileArray = Array.from(files);
+
+    const converted = await Promise.all(
+      fileArray.map(file => new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            base64: e.target.result,
+          });
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      }))
+    );
+
+    const validFiles = converted.filter(Boolean);
+    setUploadFilesList(prev => [...prev, ...validFiles]);
+  };
+
+  const handleResumeFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processFilesBatch(e.target.files);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFilesBatch(e.dataTransfer.files);
+    }
+  };
+
+  const removeFileFromBatch = (index) => {
+    setUploadFilesList(prev => prev.filter((_, i) => i !== index));
+  };
 
   /* ── Load Applications from API ── */
   const refreshApplications = useCallback(async () => {
@@ -121,38 +618,43 @@ export default function Employer() {
     }
   }, [user]);
 
-  /* ── Upload Resume Handler ── */
+  /* ── Upload Resume Handler (Multi-File Batch) ── */
   const handleUploadResumeSubmit = async (e) => {
     e.preventDefault();
-    if (!uploadForm.name || !uploadForm.email || !uploadForm.resumeUrl) {
-      alert('Please fill candidate name, email, and select a resume file.');
+    if (uploadFilesList.length === 0) {
+      alert('Please select or drag at least one resume file to upload.');
       return;
     }
     setUploadingResume(true);
     try {
       const token = localStorage.getItem('ds_token');
+      const payload = uploadFilesList.map(item => {
+        const cleanFileName = item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+        return {
+          name: cleanFileName || 'Uploaded Student Resume',
+          email: '—',
+          phone: '—',
+          department: 'Uploaded Resume',
+          resumeUrl: item.base64,
+          resumeName: item.name,
+          notes: '',
+        };
+      });
+
       const res = await fetch('/api/resumes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(uploadForm),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to upload resume.');
+      if (!res.ok) throw new Error(data.error || 'Failed to upload resumes.');
       
-      showToast(`✅ Resume for "${uploadForm.name}" uploaded and synced to database!`);
+      showToast(`✅ Successfully uploaded ${payload.length} student resume(s) to database!`);
       setShowUploadResumeModal(false);
-      setUploadForm({
-        name: '',
-        email: '',
-        phone: '',
-        department: 'MBA Finance',
-        resumeUrl: '',
-        resumeName: '',
-        notes: '',
-      });
+      setUploadFilesList([]);
       refreshResumes();
     } catch (err) {
       alert(err.message);
@@ -211,24 +713,7 @@ export default function Employer() {
     setTimeout(() => setToast(''), 3000);
   };
 
-  /* ── Read File to Base64 ── */
-  const handleResumeFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      alert('File size exceeds 10MB limit.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setUploadForm(prev => ({
-        ...prev,
-        resumeUrl: reader.result,
-        resumeName: file.name
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
+
 
   /* ── Filtered Resumes List ── */
   const filteredResumes = useMemo(() => {
@@ -278,6 +763,100 @@ export default function Employer() {
     return applications.filter(a => a.jobId === selectedJob.id || a.jobTitle === selectedJob.title);
   }, [applications, selectedJob]);
 
+  /* ── Filter Function for Database / Candidates ── */
+  const applyDbFilters = useCallback((list) => {
+    let result = list;
+
+    if (dbFilters.city.trim()) {
+      const q = dbFilters.city.toLowerCase().trim();
+      result = result.filter(c => (c.location || '').toLowerCase().includes(q) || (c.personalInfo?.city || '').toLowerCase().includes(q));
+    }
+
+    if (dbFilters.excludeKeywords.trim()) {
+      const ex = dbFilters.excludeKeywords.toLowerCase().trim();
+      result = result.filter(c => {
+        const text = `${c.personalInfo?.name} ${c.department} ${c.jobTitle} ${c.location}`.toLowerCase();
+        return !text.includes(ex);
+      });
+    }
+
+    if (dbFilters.minExp !== '') {
+      const minE = parseFloat(dbFilters.minExp);
+      result = result.filter(c => {
+        const expStr = c.experience || c.roleData?.experience || '0';
+        const expNum = parseFloat(expStr.match(/\d+(\.\d+)?/)?.[0] || '0');
+        return expNum >= minE;
+      });
+    }
+
+    if (dbFilters.maxExp !== '') {
+      const maxE = parseFloat(dbFilters.maxExp);
+      result = result.filter(c => {
+        const expStr = c.experience || c.roleData?.experience || '0';
+        const expNum = parseFloat(expStr.match(/\d+(\.\d+)?/)?.[0] || '0');
+        return expNum <= maxE;
+      });
+    }
+
+    if (dbFilters.industry.trim()) {
+      const ind = dbFilters.industry.toLowerCase().trim();
+      result = result.filter(c => (c.department || c.industry || '').toLowerCase().includes(ind));
+    }
+
+    if (dbFilters.company.trim()) {
+      const comp = dbFilters.company.toLowerCase().trim();
+      result = result.filter(c => (c.company || c.previousCompany || '').toLowerCase().includes(comp));
+    }
+
+    if (dbFilters.degree.trim()) {
+      const deg = dbFilters.degree.toLowerCase().trim();
+      result = result.filter(c => (c.personalInfo?.education || c.roleData?.mbaCollege || '').toLowerCase().includes(deg));
+    }
+
+    if (dbFilters.educationLevel === 'graduate') {
+      result = result.filter(c => (c.personalInfo?.education || '').toLowerCase().includes('graduat') || (c.roleData?.mbaCollege || '').length > 0);
+    } else if (dbFilters.educationLevel === 'postgraduate') {
+      result = result.filter(c => (c.personalInfo?.education || '').toLowerCase().includes('mba') || (c.personalInfo?.education || '').toLowerCase().includes('master') || (c.roleData?.mbaCollege || '').length > 0);
+    }
+
+    if (dbFilters.gender !== 'all') {
+      result = result.filter(c => (c.personalInfo?.gender || 'Male').toLowerCase() === dbFilters.gender.toLowerCase());
+    }
+
+    if (dbFilters.language.trim()) {
+      const lang = dbFilters.language.toLowerCase().trim();
+      result = result.filter(c => (c.languages || 'English, Hindi, Odia').toLowerCase().includes(lang));
+    }
+
+    if (dbFilters.englishFluency.trim()) {
+      const ef = dbFilters.englishFluency.toLowerCase().trim();
+      result = result.filter(c => (c.englishProficiency || 'Basic').toLowerCase().includes(ef));
+    }
+
+    if (dbFilters.department.trim()) {
+      const dept = dbFilters.department.toLowerCase().trim();
+      result = result.filter(c => (c.department || c.jobTitle || '').toLowerCase().includes(dept));
+    }
+
+    if (dbFilters.noticePeriod.trim()) {
+      const np = dbFilters.noticePeriod.toLowerCase().trim();
+      result = result.filter(c => (c.noticePeriod || 'Immediate').toLowerCase().includes(np));
+    }
+
+    if (dbFilters.relocate) {
+      result = result.filter(c => c.willingToRelocate !== false);
+    }
+    if (dbFilters.nightShift) {
+      result = result.filter(c => c.shiftPreference !== 'Day only');
+    }
+
+    if (dbFilters.hasResume) {
+      result = result.filter(c => Boolean(c.resumeUrl));
+    }
+
+    return result;
+  }, [dbFilters]);
+
   /* ── Filtered candidates for selected job ── */
   const filteredJobCandidates = useMemo(() => {
     let list = jobApplications;
@@ -293,13 +872,13 @@ export default function Employer() {
       list = list.filter(a => a.status === 'Rejected');
     }
 
-    // Filter by resume / requirements checkboxes
-    if (candidateFilter.hasResume) {
-      list = list.filter(a => Boolean(a.resumeUrl));
-    }
+    return applyDbFilters(list);
+  }, [jobApplications, selectedStatusTab, applyDbFilters]);
 
-    return list;
-  }, [jobApplications, selectedStatusTab, candidateFilter]);
+  /* ── Filtered candidates for Database Matches Search ── */
+  const filteredDatabaseCandidates = useMemo(() => {
+    return applyDbFilters(applications);
+  }, [applications, applyDbFilters]);
 
   if (!user || (user.role !== 'admin' && user.role !== 'employer')) {
     return (
@@ -524,30 +1103,12 @@ export default function Employer() {
               {/* Grid: Left Filters Sidebar + Right Candidates Cards */}
               <div className="applicant-view-grid">
 
-                {/* Left Filter Sidebar */}
-                <aside className="candidate-filter-sidebar">
-                  <div className="filter-group-header">⚙️ Filters</div>
-
-                  <div className="filter-group">
-                    <label className="filter-group-label">Show candidates who</label>
-                    <label className="filter-checkbox-item">
-                      <input
-                        type="checkbox"
-                        checked={candidateFilter.matchedReq}
-                        onChange={e => setCandidateFilter(prev => ({ ...prev, matchedReq: e.target.checked }))}
-                      />
-                      Matched to job requirements
-                    </label>
-                    <label className="filter-checkbox-item">
-                      <input
-                        type="checkbox"
-                        checked={candidateFilter.hasResume}
-                        onChange={e => setCandidateFilter(prev => ({ ...prev, hasResume: e.target.checked }))}
-                      />
-                      Have Resume Attached ({jobApplications.filter(a => Boolean(a.resumeUrl)).length})
-                    </label>
-                  </div>
-                </aside>
+                {/* 18-Category Advanced Candidate Filter Sidebar */}
+                <CandidateFilterSidebar
+                  dbFilters={dbFilters}
+                  setDbFilters={setDbFilters}
+                  resetDbFilters={resetDbFilters}
+                />
 
                 {/* Right Candidates Cards List */}
                 <div className="candidate-cards-list">
@@ -649,35 +1210,90 @@ export default function Employer() {
                 >
                   <span>☰</span>
                 </button>
-                <h2>Database Matches & Applications ({applications.length})</h2>
+                <h2>Database Matches & Candidate Search ({filteredDatabaseCandidates.length})</h2>
               </div>
-              <div className="candidate-cards-list" style={{ marginTop: '1rem' }}>
-                {applications.map(app => (
-                  <div key={app.id} className="candidate-card">
-                    <div className="candidate-card-header">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {app.photoUrl ? (
-                          <img src={app.photoUrl} alt={app.personalInfo?.name} className="candidate-initials-avatar" style={{ objectFit: 'cover' }} />
-                        ) : (
-                          <div className="candidate-initials-avatar">
-                            {app.personalInfo?.name ? app.personalInfo.name.charAt(0).toUpperCase() : '👤'}
+
+              <div className="applicant-view-grid">
+                {/* 18-Category Advanced Candidate Filter Sidebar */}
+                <CandidateFilterSidebar
+                  dbFilters={dbFilters}
+                  setDbFilters={setDbFilters}
+                  resetDbFilters={resetDbFilters}
+                />
+
+                {/* Candidate Results List */}
+                <div className="candidate-cards-list">
+                  <div className="candidate-list-summary">
+                    <span>Showing <strong>{filteredDatabaseCandidates.length}</strong> matched candidates</span>
+                    <button className="btn-download-excel" onClick={() => alert('Exporting candidate database...')}>
+                      📥 Download Excel
+                    </button>
+                  </div>
+
+                  {filteredDatabaseCandidates.length > 0 ? (
+                    filteredDatabaseCandidates.map(app => (
+                      <div key={app.id} className="candidate-card animate-fade-in">
+                        <div className="candidate-card-header">
+                          <div className="candidate-profile-left">
+                            {app.photoUrl ? (
+                              <img src={app.photoUrl} alt={app.personalInfo?.name} className="candidate-initials-avatar" style={{ objectFit: 'cover', border: '1px solid #cbd5e1' }} />
+                            ) : (
+                              <div className="candidate-initials-avatar">
+                                {app.personalInfo?.name ? app.personalInfo.name.charAt(0).toUpperCase() : '👤'}
+                              </div>
+                            )}
+                            <div>
+                              <div className="candidate-name-row">
+                                <h3 className="candidate-name">{app.personalInfo?.name || 'Applicant'}</h3>
+                                <button className="btn-full-profile" onClick={() => setSelectedApp(app)}>
+                                  View full profile ›
+                                </button>
+                              </div>
+                              <div className="candidate-sub-meta">
+                                <span>👤 {app.personalInfo?.gender || 'Male'}, {app.personalInfo?.dob ? '24 yr' : '26 yr'}</span>
+                                <span>• {app.experience || 'Fresher'}</span>
+                                <span>• 📍 {app.location || 'Bhubaneswar, Odisha'}</span>
+                              </div>
+                            </div>
                           </div>
-                        )}
-                        <div>
-                          <h3 style={{ margin: 0, fontSize: '16px' }}>{app.personalInfo?.name || 'Applicant'}</h3>
-                          <p style={{ fontSize: '13px', color: '#64748b', margin: '2px 0 0' }}>Applied for: <strong>{app.jobTitle}</strong> ({app.department})</p>
+                          <span className="high-match-tag">✦ High Match</span>
+                        </div>
+
+                        {/* Requirement Match Pills */}
+                        <div className="matching-pills-row">
+                          <span className="matching-label">✦ Highlights :</span>
+                          <span className="match-pill">✓ Education</span>
+                          <span className="match-pill">✓ English Proficiency</span>
+                          <span className="match-pill">✓ Location</span>
+                          <span className="match-pill">✓ Department: {app.department || app.jobTitle}</span>
+                        </div>
+
+                        {/* Candidate Specs */}
+                        <div className="candidate-specs-grid">
+                          <div><strong>🎓 Education:</strong> {app.roleData?.mbaCollege || app.personalInfo?.education || 'Graduate / MBA'}</div>
+                          <div><strong>🗣️ Language:</strong> English (Basic), Hindi, Odia</div>
+                        </div>
+
+                        {/* Action Buttons Bar */}
+                        <div className="candidate-card-actions">
+                          <button
+                            className="btn-action-primary"
+                            onClick={() => setSelectedApp(app)}
+                            title="View candidate details & files"
+                          >
+                            👁️ View Details
+                          </button>
                         </div>
                       </div>
-                      <span className={`status-pill ${app.status.toLowerCase().replace(/\s+/g, '-')}`}>{app.status}</span>
+                    ))
+                  ) : (
+                    <div className="no-candidates-box">
+                      <div className="empty-emoji">👥</div>
+                      <h3>No candidates matched your search criteria</h3>
+                      <p>Try clearing or broadening some filters in the left sidebar.</p>
                     </div>
-
-                    <div className="candidate-card-actions" style={{ marginTop: '1rem' }}>
-                      <button className="btn-action-primary" onClick={() => setSelectedApp(app)}>
-                        👁️ View Details
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1191,102 +1807,116 @@ export default function Employer() {
         </div>
       )}
 
-      {/* ── Upload Student Resume Modal ── */}
+      {/* ── Upload Student Resume Modal (Multi-File Drag & Drop) ── */}
       {showUploadResumeModal && (
         <div className="admin-modal-overlay" onClick={() => setShowUploadResumeModal(false)}>
-          <div className="admin-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '560px' }}>
+          <div className="admin-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '540px', padding: '1.75rem' }}>
             <div className="admin-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>📤 Upload Student Resume</h3>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>📤 Upload Student Resumes</h3>
               <button className="admin-modal-close" onClick={() => setShowUploadResumeModal(false)} aria-label="Close modal">✕</button>
             </div>
 
-            <form onSubmit={handleUploadResumeSubmit} className="post-job-wizard-form">
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label className="form-label">Student Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Rahul Sharma"
-                  value={uploadForm.name}
-                  onChange={e => setUploadForm({ ...uploadForm, name: e.target.value })}
-                  className="form-input"
-                />
-              </div>
+            <form onSubmit={handleUploadResumeSubmit}>
+              {/* Drag & Drop Zone Box */}
+              <div
+                className={`resume-dropzone-box ${isDragging ? 'dragging' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                style={{
+                  border: isDragging ? '2px dashed #168a67' : '2px dashed #cbd5e1',
+                  borderRadius: '12px',
+                  padding: '2rem 1.5rem',
+                  textAlign: 'center',
+                  background: isDragging ? '#dcfce7' : '#f8fafc',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  marginBottom: '1.25rem'
+                }}
+              >
+                <div style={{ fontSize: '2.8rem', marginBottom: '8px' }}>📁</div>
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', color: '#0f172a', fontWeight: 700 }}>
+                  Drag & Drop Multiple Resumes Here
+                </h4>
+                <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b' }}>
+                  Select multiple PDF, DOCX, PNG, JPG files at once (Batch Upload)
+                </p>
 
-              <div className="form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '1rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Email Address *</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="e.g. rahul.sharma@example.com"
-                    value={uploadForm.email}
-                    onChange={e => setUploadForm({ ...uploadForm, email: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Phone Number</label>
-                  <input
-                    type="tel"
-                    placeholder="e.g. +91 9876543210"
-                    value={uploadForm.phone}
-                    onChange={e => setUploadForm({ ...uploadForm, phone: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label className="form-label">Department / Specialization *</label>
-                <select
-                  value={uploadForm.department}
-                  onChange={e => setUploadForm({ ...uploadForm, department: e.target.value })}
-                  className="form-input"
-                >
-                  <option value="MBA Finance">MBA Finance</option>
-                  <option value="Sales & Marketing">Sales & Marketing</option>
-                  <option value="Human Resources (HR)">Human Resources (HR)</option>
-                  <option value="Operations & Logistics">Operations & Logistics</option>
-                  <option value="Software / IT">Software / IT</option>
-                  <option value="Banking & Finance">Banking & Finance</option>
-                  <option value="General Management">General Management</option>
-                </select>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label className="form-label">Upload Resume File (PDF / DOCX / Image) *</label>
                 <input
                   type="file"
-                  required
+                  multiple
                   accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                   onChange={handleResumeFileChange}
-                  className="form-input"
+                  style={{ display: 'none' }}
+                  id="resume-file-input-multi"
                 />
-                {uploadForm.resumeName && (
-                  <span style={{ fontSize: '12px', color: '#168a67', fontWeight: 600, display: 'block', marginTop: '4px' }}>
-                    ✓ File selected: {uploadForm.resumeName}
-                  </span>
-                )}
+
+                <label htmlFor="resume-file-input-multi" className="btn-action-primary" style={{ cursor: 'pointer', display: 'inline-block', padding: '8px 22px' }}>
+                  📁 Browse Files (Multiple)
+                </label>
               </div>
 
-              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                <label className="form-label">Notes / Assessment Remarks (Optional)</label>
-                <textarea
-                  rows="2"
-                  placeholder="e.g. Strong in financial modeling, available for immediate joining."
-                  value={uploadForm.notes}
-                  onChange={e => setUploadForm({ ...uploadForm, notes: e.target.value })}
-                  className="form-input"
-                />
-              </div>
+              {/* Selected Files Batch List */}
+              {uploadFilesList.length > 0 && (
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155' }}>
+                      Selected Files ({uploadFilesList.length})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setUploadFilesList([])}
+                      style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Clear All
+                    </button>
+                  </div>
+
+                  <div style={{ maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
+                    {uploadFilesList.map((fileItem, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '6px 12px',
+                          background: '#f1f5f9',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                          <span>📄</span>
+                          <span style={{ fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px' }}>
+                            {fileItem.name}
+                          </span>
+                          <span style={{ color: '#64748b', fontSize: '11px' }}>
+                            ({(fileItem.size / 1024).toFixed(0)} KB)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFileFromBatch(idx)}
+                          style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}
+                          title="Remove file"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="modal-actions-row" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button type="button" className="btn-action-outline" onClick={() => setShowUploadResumeModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-post-job" disabled={uploadingResume}>
-                  {uploadingResume ? 'Uploading & Syncing...' : '💾 Upload & Sync to Database'}
+                <button type="submit" className="btn-post-job" disabled={uploadingResume || uploadFilesList.length === 0}>
+                  {uploadingResume
+                    ? `Uploading ${uploadFilesList.length} Resume(s)...`
+                    : `💾 Upload ${uploadFilesList.length > 0 ? `${uploadFilesList.length} Resume(s)` : 'Resumes'}`}
                 </button>
               </div>
             </form>

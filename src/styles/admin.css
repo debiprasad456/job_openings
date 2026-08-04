@@ -256,7 +256,8 @@
    VIEW A: ALL JOBS LIST
    ══════════════════════════════════════════════════════════ */
 .all-jobs-container {
-  max-width: 1000px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .all-jobs-header {
@@ -480,7 +481,8 @@
    VIEW B: SPECIFIC JOB APPLICANTS DETAILS VIEW
    ══════════════════════════════════════════════════════════ */
 .job-details-applicant-view {
-  max-width: 1100px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .job-details-header-bar {
@@ -1537,7 +1539,8 @@
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 28px;
-  max-width: 600px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .referral-hero-card h3 {
@@ -1814,4 +1817,127 @@
 
 .btn-delete-icon:hover {
   background: #fee2e2;
+}
+
+/* ── 18-Category Advanced Candidate Filter Sidebar ── */
+.filter-group-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.btn-reset-filters {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-reset-filters:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.filter-accordion {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.accordion-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  background: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.accordion-title:hover {
+  background: #f1f5f9;
+}
+
+.accordion-title .arrow {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.accordion-content {
+  padding: 12px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.filter-input-text,
+.filter-select {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 12px;
+  outline: none;
+  background: #ffffff;
+  transition: border-color 0.2s ease;
+}
+
+.filter-input-text:focus,
+.filter-select:focus {
+  border-color: #168a67;
+  box-shadow: 0 0 0 2px rgba(22, 138, 103, 0.12);
+}
+
+.filter-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.filter-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.filter-radio-item {
+  font-size: 12px;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.filter-radio-item input {
+  accent-color: #168a67;
 }
