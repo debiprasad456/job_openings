@@ -52,8 +52,8 @@ export default async function handler(req, res) {
 
     // GET — Fetch combined resumes (Applications + Employer Uploads)
     if (req.method === 'GET') {
-      const uploadedList = await resumesCollection.find({}).sort({ uploadedAt: -1 }).toArray();
-      const appsList = await appsCollection.find({ resumeUrl: { $exists: true, $ne: '' } }).sort({ appliedAt: -1 }).toArray();
+      const uploadedList = await resumesCollection.find({}).toArray();
+      const appsList = await appsCollection.find({ resumeUrl: { $exists: true, $ne: '' } }).toArray();
 
       const mappedUploaded = uploadedList.map(r => ({
         id: r._id.toString(),

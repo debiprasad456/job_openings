@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     const users = db.collection('users');
 
     // ── Auto-seed initial Employer user into MongoDB if not present ──
-    if (cleanEmail === 'admin@diversesolutions.com' || cleanEmail === 'employer@diversesolutions.com') {
+    if (cleanEmail === 'admin@diversesolutions.com' || cleanEmail === 'employer@diversesolutions.com' || cleanEmail === 'admin@diversesolutions.in') {
       const existingUser = await users.findOne({ email: cleanEmail });
       if (!existingUser) {
         const passwordHash = await bcrypt.hash('Admin@1234', 10);
