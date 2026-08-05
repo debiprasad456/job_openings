@@ -700,9 +700,10 @@ export default function Employer() {
     }
   };
 
-  /* ── Delete Uploaded Resume ── */
-  const handleDeleteResume = async (resumeId) => {
-    if (!window.confirm('Are you sure you want to delete this uploaded resume?')) return;
+  /* ── Delete Uploaded Resume / Job Application ── */
+  const handleDeleteResume = async (resumeId, source) => {
+    const itemLabel = source === 'applied_candidate' ? 'job application' : 'uploaded resume';
+    if (!window.confirm(`Are you sure you want to delete this ${itemLabel}?`)) return;
     try {
       const token = localStorage.getItem('ds_token');
       const res = await fetch('/api/resumes', {
@@ -711,11 +712,15 @@ export default function Employer() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ id: resumeId }),
+        body: JSON.stringify({ id: resumeId, source }),
       });
       if (res.ok) {
-        showToast('🗑️ Resume deleted successfully.');
+        showToast(`🗑️ ${source === 'applied_candidate' ? 'Job application' : 'Resume'} deleted successfully.`);
         refreshResumes();
+        refreshApplications();
+      } else {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete entry.');
       }
     } catch (err) {
       alert(err.message);
@@ -1486,8 +1491,8 @@ export default function Employer() {
                                   {r.canDelete && (
                                     <button
                                       className="btn-delete-icon"
-                                      onClick={() => handleDeleteResume(r.id)}
-                                      title="Delete uploaded student resume"
+                                      onClick={() => handleDeleteResume(r.id, r.source)}
+                                      title={r.source === 'applied_candidate' ? 'Delete candidate job application' : 'Delete uploaded student resume'}
                                     >
                                       🗑️
                                     </button>
@@ -1547,8 +1552,8 @@ export default function Employer() {
                               {r.canDelete && (
                                 <button
                                   className="btn-delete-icon"
-                                  onClick={() => handleDeleteResume(r.id)}
-                                  title="Delete uploaded student resume"
+                                  onClick={() => handleDeleteResume(r.id, r.source)}
+                                  title={r.source === 'applied_candidate' ? 'Delete candidate job application' : 'Delete uploaded student resume'}
                                 >
                                   🗑️
                                 </button>

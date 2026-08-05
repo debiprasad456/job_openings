@@ -83,7 +83,7 @@ export default async function handler(req, res) {
         sourceLabel: `Applied for ${a.jobTitle}`,
         date: a.appliedAt,
         notes: `Application Status: ${a.status}`,
-        canDelete: false,
+        canDelete: true,
       }));
 
       const allResumes = [...mappedUploaded, ...mappedApps].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -162,13 +162,21 @@ export default async function handler(req, res) {
       });
     }
 
-    // DELETE — Delete an employer-uploaded resume
+    // DELETE — Delete an employer-uploaded resume or a job application
     if (req.method === 'DELETE') {
-      const { id } = req.body;
+      const { id, source } = req.body;
       if (!id || !ObjectId.isValid(id)) {
-        return res.status(400).json({ error: 'Valid resume ID required.' });
+        return res.status(400).json({ error: 'Valid resume or application ID required.' });
       }
-      await resumesCollection.deleteOne({ _id: new ObjectId(id) });
+
+      if (source === 'applied_candidate') {
+        await appsCollection.deleteOne({ _id: new ObjectId(id) });
+      } else {
+        const resDel = await resumesCollection.deleteOne({ _id: new ObjectId(id) });
+        if (resDel.deletedCount === 0) {
+          await appsCollection.deleteOne({ _id: new ObjectId(id) });
+        }
+      }
       return res.status(200).json({ success: true });
     }
 
