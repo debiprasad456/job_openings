@@ -527,25 +527,19 @@ export default function Employer() {
     const duplicates = [];
     const uniqueFiles = [];
 
-    // Set of existing file names and candidate names in database & current batch
+    // Set of existing file names in database & current upload queue
     const existingFileNames = new Set([
       ...resumesList.map(r => (r.resumeName || '').toLowerCase().trim()),
       ...uploadFilesList.map(f => (f.name || '').toLowerCase().trim())
-    ]);
-
-    const existingCandidateNames = new Set([
-      ...resumesList.map(r => (r.name || '').toLowerCase().trim())
-    ]);
+    ].filter(Boolean));
 
     for (const file of fileArray) {
       const fileNameLower = file.name.toLowerCase().trim();
-      const cleanCandidateName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ').toLowerCase().trim();
 
-      if (existingFileNames.has(fileNameLower) || (cleanCandidateName && existingCandidateNames.has(cleanCandidateName))) {
+      if (fileNameLower && existingFileNames.has(fileNameLower)) {
         duplicates.push(file.name);
       } else {
-        existingFileNames.add(fileNameLower);
-        if (cleanCandidateName) existingCandidateNames.add(cleanCandidateName);
+        if (fileNameLower) existingFileNames.add(fileNameLower);
         uniqueFiles.push(file);
       }
     }

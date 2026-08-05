@@ -100,35 +100,35 @@ export default async function handler(req, res) {
       }
 
       // Fetch existing resume records to prevent duplicate uploads
-      const existingUploaded = await resumesCollection.find({}, { projection: { resumeName: 1, name: 1 } }).toArray();
-      const existingApps = await appsCollection.find({ resumeUrl: { $exists: true, $ne: '' } }, { projection: { resumeName: 1, 'personalInfo.name': 1 } }).toArray();
+      const existingUploaded = await resumesCollection.find({}, { projection: { resumeName: 1, resumeUrl: 1 } }).toArray();
+      const existingApps = await appsCollection.find({ resumeUrl: { $exists: true, $ne: '' } }, { projection: { resumeName: 1, resumeUrl: 1 } }).toArray();
 
       const existingResumeNames = new Set([
         ...existingUploaded.map(r => (r.resumeName || '').toLowerCase().trim()),
         ...existingApps.map(a => (a.resumeName || '').toLowerCase().trim())
-      ]);
+      ].filter(Boolean));
 
-      const existingCandidateNames = new Set([
-        ...existingUploaded.map(r => (r.name || '').toLowerCase().trim()),
-        ...existingApps.map(a => (a.personalInfo?.name || '').toLowerCase().trim())
-      ]);
+      const existingUrls = new Set([
+        ...existingUploaded.map(r => (r.resumeUrl || '').trim()),
+        ...existingApps.map(a => (a.resumeUrl || '').trim())
+      ].filter(Boolean));
 
       const docsToInsert = [];
       const skippedDuplicates = [];
+      const invalidFiles = [];
 
       for (const item of items) {
         const { name, email, phone, department, resumeUrl, resumeName, notes } = item;
-        if (!resumeUrl) continue;
+        if (!resumeUrl || typeof resumeUrl !== 'string') {
+          invalidFiles.push(resumeName || name || 'Unknown file');
+          continue;
+        }
 
-        // Validate resumeUrl must be a proper https URL
-        try {
-          const parsedUrl = new URL(resumeUrl);
-          if (parsedUrl.protocol !== 'https:') {
-            skippedDuplicates.push(resumeName || name || 'Invalid URL');
-            continue;
-          }
-        } catch {
-          skippedDuplicates.push(resumeName || name || 'Invalid URL');
+        // Validate resumeUrl (supports base64 data: URIs, http://, and https://)
+        const isDataUrl = resumeUrl.startsWith('data:');
+        const isHttpUrl = resumeUrl.startsWith('http://') || resumeUrl.startsWith('https://');
+        if (!isDataUrl && !isHttpUrl) {
+          invalidFiles.push(resumeName || name || 'Invalid URL');
           continue;
         }
 
@@ -139,16 +139,18 @@ export default async function handler(req, res) {
         const fileNameLower = (resumeName || '').toLowerCase().trim();
         const cleanFileName = (resumeName || 'Resume.pdf').replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
         const derivedName = name && name.trim() ? name.trim() : (cleanFileName || 'Uploaded Resume');
-        const candidateNameLower = derivedName.toLowerCase().trim();
 
-        // Prevent duplicate file name or duplicate candidate name
-        if ((fileNameLower && existingResumeNames.has(fileNameLower)) || (candidateNameLower && existingCandidateNames.has(candidateNameLower))) {
+        // Prevent duplicate file name or identical resumeUrl (only for http/https URLs)
+        const isDuplicateFile = Boolean(fileNameLower && existingResumeNames.has(fileNameLower));
+        const isDuplicateUrl = Boolean(isHttpUrl && existingUrls.has(resumeUrl.trim()));
+
+        if (isDuplicateFile || isDuplicateUrl) {
           skippedDuplicates.push(resumeName || derivedName);
           continue;
         }
 
-        existingResumeNames.add(fileNameLower);
-        existingCandidateNames.add(candidateNameLower);
+        if (fileNameLower) existingResumeNames.add(fileNameLower);
+        if (isHttpUrl) existingUrls.add(resumeUrl.trim());
 
         docsToInsert.push({
           name: derivedName,
@@ -165,9 +167,17 @@ export default async function handler(req, res) {
       }
 
       if (docsToInsert.length === 0) {
-        return res.status(400).json({
-          error: `Duplicate Resume Alert: The selected resume file(s) already exist in your database (${skippedDuplicates.join(', ')}). No duplicate entries were created.`
-        });
+        if (skippedDuplicates.length > 0) {
+          return res.status(400).json({
+            error: `Duplicate Resume Alert: The selected resume file(s) already exist in your database (${skippedDuplicates.join(', ')}). No duplicate entries were created.`
+          });
+        }
+        if (invalidFiles.length > 0) {
+          return res.status(400).json({
+            error: `Upload Error: The selected file(s) contain invalid or unsupported formats (${invalidFiles.join(', ')}).`
+          });
+        }
+        return res.status(400).json({ error: 'No valid resume files were provided for upload.' });
       }
 
       const result = await resumesCollection.insertMany(docsToInsert);
