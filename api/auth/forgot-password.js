@@ -1,12 +1,12 @@
 // POST /api/auth/forgot-password
+import { randomInt } from 'crypto';
 import nodemailer from 'nodemailer';
 import { getDb } from '../../lib/db.js';
+import { setCorsHeaders } from '../../lib/cors-helper.js';
 
 export default async function handler(req, res) {
   // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCorsHeaders(req, res, { methods: 'POST, OPTIONS', headers: 'Content-Type' });
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -23,7 +23,8 @@ export default async function handler(req, res) {
     const user = await users.findOne({ email: normalizedEmail });
 
     if (!user) {
-      return res.status(404).json({ error: 'No account found with this email address.' });
+      // Return success even when email not found — prevents user enumeration
+      return res.status(200).json({ message: 'If an account with this email exists, an OTP has been sent.' });
     }
 
     // Rate Limiting: Max 3 attempts per 15 minutes
@@ -40,8 +41,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // Generate 6-digit numeric OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate cryptographically secure 6-digit OTP
+    const otp = randomInt(100000, 1000000).toString();
     const otpExpiry = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes expiry
 
     // Save OTP, Expiry, and updated attempts array to user document
@@ -56,8 +57,10 @@ export default async function handler(req, res) {
       }
     );
 
-    const isProd = process.env.NODE_ENV === 'production';
-    console.log(`[FORGOT PASSWORD] Generated OTP for ${normalizedEmail}: ${otp}`);
+    // Only log OTP in non-production environments
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[FORGOT PASSWORD] Generated OTP for ${normalizedEmail}: ${otp}`);
+    }
 
     // Try to send real email if SMTP credentials are provided
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {

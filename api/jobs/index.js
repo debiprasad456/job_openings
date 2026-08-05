@@ -3,13 +3,16 @@
 
 import jwt from 'jsonwebtoken';
 import { getDb } from '../../lib/db.js';
+import { setCorsHeaders } from '../../lib/cors-helper.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || '7bc4e8d0894d33b9cfa5cac241af9893a5f86fe416771db9e7c393925238eeda';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required.');
+}
+const _JWT_SECRET = JWT_SECRET || 'dev-only-local-secret';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(req, res, { methods: 'GET, POST, OPTIONS', headers: 'Content-Type, Authorization' });
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -59,7 +62,7 @@ export default async function handler(req, res) {
       const token = authHeader.split(' ')[1];
       let decoded;
       try {
-        decoded = jwt.verify(token, JWT_SECRET);
+        decoded = jwt.verify(token, _JWT_SECRET);
       } catch (e) {
         return res.status(401).json({ error: 'Invalid or expired authentication token.' });
       }
@@ -110,6 +113,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
     console.error('[api/jobs]', err);
-    return res.status(500).json({ error: `Server error: ${err.message}` });
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 }

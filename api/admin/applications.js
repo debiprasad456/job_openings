@@ -4,9 +4,13 @@
 import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
 import { getDb } from '../../lib/db.js';
+import { setCorsHeaders } from '../../lib/cors-helper.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const SECRET_KEY = JWT_SECRET || '7bc4e8d0894d33b9cfa5cac241af9893a5f86fe416771db9e7c393925238eeda';
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required.');
+}
+const SECRET_KEY = JWT_SECRET || 'dev-only-local-secret';
 
 function verifyAdmin(req) {
   const auth = req.headers.authorization;
@@ -32,9 +36,7 @@ function verifyAdmin(req) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(req, res, { methods: 'GET, PATCH, DELETE, OPTIONS', headers: 'Content-Type, Authorization' });
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {

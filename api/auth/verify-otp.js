@@ -1,15 +1,17 @@
 // POST /api/auth/verify-otp
 import jwt from 'jsonwebtoken';
 import { getDb } from '../../lib/db.js';
+import { setCorsHeaders } from '../../lib/cors-helper.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const SECRET_KEY = JWT_SECRET || 'dev-secret-change-in-production';
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required.');
+}
+const SECRET_KEY = JWT_SECRET || 'dev-only-local-secret';
 
 export default async function handler(req, res) {
   // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCorsHeaders(req, res, { methods: 'POST, OPTIONS', headers: 'Content-Type' });
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -39,9 +41,19 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
     }
 
+    // Brute-force protection: max 5 OTP guess attempts
+    const guessCount = user.otpGuessCount || 0;
+    if (guessCount >= 5) {
+      // Invalidate the OTP to force user to request a new one
+      await users.updateOne({ _id: user._id }, { $unset: { resetOtp: '', resetOtpExpires: '', otpGuessCount: '' } });
+      return res.status(429).json({ error: 'Too many incorrect OTP attempts. Please request a new OTP.' });
+    }
+
     // Check matching OTP
     if (user.resetOtp !== otp.trim()) {
-      return res.status(400).json({ error: 'Invalid OTP. Please try again.' });
+      await users.updateOne({ _id: user._id }, { $inc: { otpGuessCount: 1 } });
+      const attemptsLeft = 4 - guessCount;
+      return res.status(400).json({ error: `Invalid OTP. ${attemptsLeft} attempt(s) remaining.` });
     }
 
     // Generate a temporary JWT token indicating OTP verification is successful.
@@ -51,6 +63,9 @@ export default async function handler(req, res) {
       SECRET_KEY,
       { expiresIn: '15m' }
     );
+
+    // Clear OTP and guess counter on successful verification
+    await users.updateOne({ _id: user._id }, { $unset: { otpGuessCount: '' } });
 
     return res.status(200).json({
       message: 'OTP verified successfully.',

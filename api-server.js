@@ -35,9 +35,20 @@ try {
   console.error('Error loading .env file:', e);
 }
 
+const ALLOWED_ORIGINS = [
+  'https://job-openings-one.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:4173',
+];
+
 const server = http.createServer(async (req, res) => {
-  // CORS Headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS Headers — restrict to known origins
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -67,9 +78,16 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Parse JSON body if present
+  const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10 MB limit
   let bodyText = '';
   req.on('data', chunk => {
+    if (bodyText.length + chunk.length > MAX_BODY_SIZE) {
+      req.destroy();
+      res.statusCode = 413;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Request body too large.' }));
+      return;
+    }
     bodyText += chunk;
   });
 
@@ -112,7 +130,7 @@ const server = http.createServer(async (req, res) => {
       console.error(`Error in handler for ${pathname}:`, err);
       res.statusCode = 500;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: 'Internal server error', details: err.message }));
+      res.end(JSON.stringify({ error: 'Internal server error.' }));
     }
   });
 });

@@ -5,9 +5,13 @@
 import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
 import { getDb } from '../../lib/db.js';
+import { setCorsHeaders } from '../../lib/cors-helper.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const SECRET_KEY = JWT_SECRET || '7bc4e8d0894d33b9cfa5cac241af9893a5f86fe416771db9e7c393925238eeda';
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required.');
+}
+const SECRET_KEY = JWT_SECRET || 'dev-only-local-secret';
 
 function verifyEmployer(req) {
   const auth = req.headers.authorization;
@@ -33,9 +37,7 @@ function verifyEmployer(req) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(req, res, { methods: 'GET, POST, DELETE, OPTIONS', headers: 'Content-Type, Authorization' });
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   let currentUser;
@@ -118,6 +120,22 @@ export default async function handler(req, res) {
         const { name, email, phone, department, resumeUrl, resumeName, notes } = item;
         if (!resumeUrl) continue;
 
+        // Validate resumeUrl must be a proper https URL
+        try {
+          const parsedUrl = new URL(resumeUrl);
+          if (parsedUrl.protocol !== 'https:') {
+            skippedDuplicates.push(resumeName || name || 'Invalid URL');
+            continue;
+          }
+        } catch {
+          skippedDuplicates.push(resumeName || name || 'Invalid URL');
+          continue;
+        }
+
+        // Basic field length validation
+        if (name && name.length > 200) continue;
+        if (notes && notes.length > 2000) continue;
+
         const fileNameLower = (resumeName || '').toLowerCase().trim();
         const cleanFileName = (resumeName || 'Resume.pdf').replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
         const derivedName = name && name.trim() ? name.trim() : (cleanFileName || 'Uploaded Resume');
@@ -183,6 +201,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
     console.error('[resumes API error]', err);
-    return res.status(500).json({ error: `Server error: ${err.message}` });
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 }

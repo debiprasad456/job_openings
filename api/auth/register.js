@@ -5,15 +5,17 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { getDb } from '../../lib/db.js';
+import { setCorsHeaders } from '../../lib/cors-helper.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const SECRET_KEY = JWT_SECRET || '7bc4e8d0894d33b9cfa5cac241af9893a5f86fe416771db9e7c393925238eeda';
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required.');
+}
+const SECRET_KEY = JWT_SECRET || 'dev-only-local-secret';
 
 export default async function handler(req, res) {
   // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCorsHeaders(req, res, { methods: 'POST, OPTIONS', headers: 'Content-Type' });
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
 
@@ -39,7 +41,7 @@ export default async function handler(req, res) {
         });
       }
       return res.status(500).json({
-        error: `Database connection error: ${dbErr.message}`
+        error: 'Database connection error. Please try again later.'
       });
     }
 
@@ -72,6 +74,6 @@ export default async function handler(req, res) {
     return res.status(201).json({ user, token });
   } catch (err) {
     console.error('[register]', err);
-    return res.status(500).json({ error: `Internal server error: ${err.message}` });
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 }

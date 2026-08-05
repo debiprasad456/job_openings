@@ -4,14 +4,16 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { getDb } from '../../lib/db.js';
+import { setCorsHeaders } from '../../lib/cors-helper.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const SECRET_KEY = JWT_SECRET || '7bc4e8d0894d33b9cfa5cac241af9893a5f86fe416771db9e7c393925238eeda';
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required.');
+}
+const SECRET_KEY = JWT_SECRET || 'dev-only-local-secret';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCorsHeaders(req, res, { methods: 'POST, OPTIONS', headers: 'Content-Type' });
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
 
@@ -35,14 +37,14 @@ export default async function handler(req, res) {
         });
       }
       return res.status(500).json({
-        error: `Database connection error: ${dbErr.message}`
+        error: 'Database connection error. Please try again later.'
       });
     }
 
     const users = db.collection('users');
 
-    // ── Auto-seed initial Employer user into MongoDB if not present ──
-    if (cleanEmail === 'admin@diversesolutions.com' || cleanEmail === 'employer@diversesolutions.com' || cleanEmail === 'admin@diversesolutions.in') {
+    // ── Auto-seed initial Admin user into MongoDB if not present ──
+    if (cleanEmail === 'admin@diversesolutions.com' || cleanEmail === 'admin@diversesolutions.in') {
       const existingUser = await users.findOne({ email: cleanEmail });
       if (!existingUser) {
         const passwordHash = await bcrypt.hash('Admin@1234', 10);
@@ -59,13 +61,25 @@ export default async function handler(req, res) {
 
     const user = await users.findOne({ email: cleanEmail });
     if (!user) {
-      return res.status(401).json({ error: 'No account found with this email.' });
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
+
+    // ── Progressive slow-down on repeated failed login attempts ──
+    const now = new Date();
+    const fifteenMinsAgo = new Date(now.getTime() - 15 * 60 * 1000);
+    const recentFailures = (user.loginAttempts || []).map(t => new Date(t)).filter(t => t > fifteenMinsAgo);
+    const delayMs = recentFailures.length >= 5 ? 10000 : recentFailures.length >= 3 ? 3000 : recentFailures.length >= 1 ? 1000 : 0;
+    if (delayMs > 0) await new Promise(r => setTimeout(r, delayMs));
 
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) {
-      return res.status(401).json({ error: 'Incorrect password. Please try again.' });
+      // Record failed attempt for slow-down tracking
+      await users.updateOne({ _id: user._id }, { $push: { loginAttempts: now } }).catch(() => {});
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
+
+    // Successful login — clear failed attempt history
+    await users.updateOne({ _id: user._id }, { $unset: { loginAttempts: '' } }).catch(() => {});
 
     // ── Portal Role Enforcement ──
     const isEmployerRole = user.role === 'employer' || user.role === 'admin';
@@ -95,6 +109,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ user: safeUser, token });
   } catch (err) {
     console.error('[login]', err);
-    return res.status(500).json({ error: `Internal server error: ${err.message}` });
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 }
