@@ -512,6 +512,7 @@ export default function Employer() {
   const [resumesList, setResumesList] = useState([]);
   const [resumeSearch, setResumeSearch] = useState('');
   const [resumeSourceFilter, setResumeSourceFilter] = useState('all'); // 'all' | 'uploaded' | 'applied'
+  const [resumeViewMode, setResumeViewMode] = useState('list'); // 'list' | 'grid'
   const [showUploadResumeModal, setShowUploadResumeModal] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [uploadFilesList, setUploadFilesList] = useState([]); // [{ name, size, type, base64 }]
@@ -1335,91 +1336,192 @@ export default function Employer() {
                   )}
                 </div>
 
-                <div className="resumes-source-tabs">
-                  <button
-                    className={`source-tab-btn ${resumeSourceFilter === 'all' ? 'active' : ''}`}
-                    onClick={() => setResumeSourceFilter('all')}
-                  >
-                    All ({resumesList.length})
-                  </button>
-                  <button
-                    className={`source-tab-btn ${resumeSourceFilter === 'uploaded' ? 'active' : ''}`}
-                    onClick={() => setResumeSourceFilter('uploaded')}
-                  >
-                    📤 Employer Uploaded ({resumesList.filter(r => r.source === 'uploaded_by_employer').length})
-                  </button>
-                  <button
-                    className={`source-tab-btn ${resumeSourceFilter === 'applied' ? 'active' : ''}`}
-                    onClick={() => setResumeSourceFilter('applied')}
-                  >
-                    📋 Job Applications ({resumesList.filter(r => r.source === 'applied_candidate').length})
-                  </button>
+                <div className="resumes-toolbar-controls">
+                  <div className="resumes-source-tabs">
+                    <button
+                      className={`source-tab-btn ${resumeSourceFilter === 'all' ? 'active' : ''}`}
+                      onClick={() => setResumeSourceFilter('all')}
+                    >
+                      All ({resumesList.length})
+                    </button>
+                    <button
+                      className={`source-tab-btn ${resumeSourceFilter === 'uploaded' ? 'active' : ''}`}
+                      onClick={() => setResumeSourceFilter('uploaded')}
+                    >
+                      📤 Employer Uploaded ({resumesList.filter(r => r.source === 'uploaded_by_employer').length})
+                    </button>
+                    <button
+                      className={`source-tab-btn ${resumeSourceFilter === 'applied' ? 'active' : ''}`}
+                      onClick={() => setResumeSourceFilter('applied')}
+                    >
+                      📋 Job Applications ({resumesList.filter(r => r.source === 'applied_candidate').length})
+                    </button>
+                  </div>
+
+                  {/* View Switcher Toggle */}
+                  <div className="resume-view-toggle">
+                    <button
+                      className={`view-toggle-btn ${resumeViewMode === 'list' ? 'active' : ''}`}
+                      onClick={() => setResumeViewMode('list')}
+                      title="List View"
+                    >
+                      ☰ List View
+                    </button>
+                    <button
+                      className={`view-toggle-btn ${resumeViewMode === 'grid' ? 'active' : ''}`}
+                      onClick={() => setResumeViewMode('grid')}
+                      title="Grid Card View"
+                    >
+                      🔲 Grid Box
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Resumes Grid / Card List */}
-              <div className="resumes-grid" style={{ marginTop: '1.25rem' }}>
-                {filteredResumes.length > 0 ? (
-                  filteredResumes.map(r => {
-                    const initials = (r.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-                    return (
-                      <div key={r.id} className="resume-card animate-fade-in">
-                        <div className="resume-card-header">
-                          <div className="resume-avatar">{initials}</div>
-                          <div className="resume-meta-info">
-                            <h3 className="resume-candidate-name">{r.name}</h3>
-                            <div className="resume-sub-detail">
-                              <span>📧 {r.email}</span>
-                              {r.phone && r.phone !== '—' && <span> • 📞 {r.phone}</span>}
-                            </div>
-                            <div className="resume-dept-tag">
-                              🎓 {r.department}
-                            </div>
-                          </div>
-                          <span className={`source-badge ${r.source}`}>
-                            {r.source === 'uploaded_by_employer' ? '📤 Employer Uploaded' : '📋 Applied Candidate'}
-                          </span>
-                        </div>
-
-                        {r.notes && (
-                          <p className="resume-notes-box">
-                            💡 <strong>Notes:</strong> {r.notes}
-                          </p>
-                        )}
-
-                        <div className="resume-card-footer">
-                          <span className="resume-file-name" title={r.resumeName}>
-                            📄 {r.resumeName}
-                          </span>
-
-                          <div className="resume-actions-group">
-                            <a
-                              href={r.resumeUrl}
-                              download={r.resumeName}
-                              className="btn-action-primary"
-                              style={{ textDecoration: 'none', padding: '6px 14px', fontSize: '13px' }}
-                            >
-                              ⬇️ Download
-                            </a>
-                            {r.canDelete && (
-                              <button
-                                className="btn-delete-icon"
-                                onClick={() => handleDeleteResume(r.id)}
-                                title="Delete uploaded student resume"
-                              >
-                                🗑️
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="no-candidates-box" style={{ gridColumn: '1 / -1' }}>
+              {/* Resumes Content (List or Grid View) */}
+              <div className="resumes-content-wrap" style={{ marginTop: '1.25rem' }}>
+                {filteredResumes.length === 0 ? (
+                  <div className="no-candidates-box">
                     <div className="empty-emoji">📄</div>
                     <h3>No resumes found</h3>
                     <p>Click "+ Upload Student Resume" to add student resumes to your database.</p>
+                  </div>
+                ) : resumeViewMode === 'list' ? (
+                  /* ── LIST / TABLE VIEW ── */
+                  <div className="resumes-table-container animate-fade-in">
+                    <table className="resumes-table">
+                      <thead>
+                        <tr>
+                          <th>Candidate & Student</th>
+                          <th>Contact Info</th>
+                          <th>Department</th>
+                          <th>Source</th>
+                          <th>File Attached</th>
+                          <th style={{ textAlign: 'right' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredResumes.map(r => {
+                          const initials = (r.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                          return (
+                            <tr key={r.id} className="resume-table-row">
+                              <td>
+                                <div className="resume-table-candidate">
+                                  <div className="resume-avatar-sm">{initials}</div>
+                                  <div>
+                                    <div className="resume-candidate-name">{r.name}</div>
+                                    {r.notes && (
+                                      <div className="resume-table-note" title={r.notes}>
+                                        💡 {r.notes}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              <td>
+                                <div className="resume-table-contact">
+                                  <div>📧 {r.email}</div>
+                                  {r.phone && r.phone !== '—' && <div className="sub-phone">📞 {r.phone}</div>}
+                                </div>
+                              </td>
+                              <td>
+                                <span className="resume-dept-tag">🎓 {r.department}</span>
+                              </td>
+                              <td>
+                                <span className={`source-badge ${r.source}`}>
+                                  {r.source === 'uploaded_by_employer' ? '📤 Employer Uploaded' : '📋 Applied Candidate'}
+                                </span>
+                              </td>
+                              <td>
+                                <span className="resume-file-name-full" title={r.resumeName}>
+                                  📄 {r.resumeName}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="resume-table-actions">
+                                  <a
+                                    href={r.resumeUrl}
+                                    download={r.resumeName}
+                                    className="btn-action-primary btn-sm"
+                                    style={{ textDecoration: 'none' }}
+                                  >
+                                    ⬇️ Download
+                                  </a>
+                                  {r.canDelete && (
+                                    <button
+                                      className="btn-delete-icon"
+                                      onClick={() => handleDeleteResume(r.id)}
+                                      title="Delete uploaded student resume"
+                                    >
+                                      🗑️
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  /* ── GRID / CARD VIEW ── */
+                  <div className="resumes-grid">
+                    {filteredResumes.map(r => {
+                      const initials = (r.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                      return (
+                        <div key={r.id} className="resume-card animate-fade-in">
+                          <div className="resume-card-header">
+                            <div className="resume-avatar">{initials}</div>
+                            <div className="resume-meta-info">
+                              <h3 className="resume-candidate-name">{r.name}</h3>
+                              <div className="resume-sub-detail">
+                                <span>📧 {r.email}</span>
+                                {r.phone && r.phone !== '—' && <span> • 📞 {r.phone}</span>}
+                              </div>
+                              <div className="resume-dept-tag">
+                                🎓 {r.department}
+                              </div>
+                            </div>
+                            <span className={`source-badge ${r.source}`}>
+                              {r.source === 'uploaded_by_employer' ? '📤 Employer Uploaded' : '📋 Applied Candidate'}
+                            </span>
+                          </div>
+
+                          {r.notes && (
+                            <p className="resume-notes-box">
+                              💡 <strong>Notes:</strong> {r.notes}
+                            </p>
+                          )}
+
+                          <div className="resume-card-footer">
+                            <span className="resume-file-name" title={r.resumeName}>
+                              📄 {r.resumeName}
+                            </span>
+
+                            <div className="resume-actions-group">
+                              <a
+                                href={r.resumeUrl}
+                                download={r.resumeName}
+                                className="btn-action-primary"
+                                style={{ textDecoration: 'none', padding: '6px 14px', fontSize: '13px' }}
+                              >
+                                ⬇️ Download
+                              </a>
+                              {r.canDelete && (
+                                <button
+                                  className="btn-delete-icon"
+                                  onClick={() => handleDeleteResume(r.id)}
+                                  title="Delete uploaded student resume"
+                                >
+                                  🗑️
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
