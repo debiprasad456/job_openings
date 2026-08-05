@@ -2079,3 +2079,39 @@
 .filter-radio-item input {
   accent-color: #168a67;
 }
+
+/* ── Animated Resumes Skeleton Loading ── */
+.resume-skeleton-box {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: resumeShimmer 1.4s infinite ease-in-out;
+  border-radius: 6px;
+}
+
+@keyframes resumeShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.resume-skeleton-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.resume-skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+}
+
+.resume-skeleton-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}

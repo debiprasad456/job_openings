@@ -510,6 +510,7 @@ export default function Employer() {
 
   // Resumes state & Upload modal (Multi-File Drag & Drop)
   const [resumesList, setResumesList] = useState([]);
+  const [resumesLoading, setResumesLoading] = useState(true);
   const [resumeSearch, setResumeSearch] = useState('');
   const [resumeSourceFilter, setResumeSourceFilter] = useState('all'); // 'all' | 'uploaded' | 'applied'
   const [resumeViewMode, setResumeViewMode] = useState('list'); // 'list' | 'grid'
@@ -637,6 +638,7 @@ export default function Employer() {
   /* ── Load Resumes from API ── */
   const refreshResumes = useCallback(async () => {
     if (!user || (user.role !== 'admin' && user.role !== 'employer')) return;
+    setResumesLoading(true);
     try {
       const token = localStorage.getItem('ds_token');
       const res = await fetch('/api/resumes', {
@@ -648,6 +650,8 @@ export default function Employer() {
       }
     } catch (e) {
       console.warn('Could not load resumes list', e);
+    } finally {
+      setResumesLoading(false);
     }
   }, [user]);
 
@@ -1421,7 +1425,73 @@ export default function Employer() {
 
               {/* Resumes Content (List or Grid View) */}
               <div className="resumes-content-wrap" style={{ marginTop: '1.25rem' }}>
-                {filteredResumes.length === 0 ? (
+                {resumesLoading ? (
+                  resumeViewMode === 'list' ? (
+                    <div className="resumes-table-container">
+                      <table className="resumes-table">
+                        <thead>
+                          <tr>
+                            <th>Candidate & Student</th>
+                            <th>Contact Info</th>
+                            <th>Department</th>
+                            <th>Source</th>
+                            <th>File Attached</th>
+                            <th style={{ textAlign: 'right' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <tr key={i} className="resume-table-row">
+                              <td>
+                                <div className="resume-table-candidate" style={{ gap: '10px' }}>
+                                  <div className="resume-skeleton-box resume-skeleton-avatar" />
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '140px' }}>
+                                    <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '80%' }} />
+                                    <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '50%' }} />
+                                  </div>
+                                </div>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '120px' }}>
+                                  <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '90%' }} />
+                                  <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '60%' }} />
+                                </div>
+                              </td>
+                              <td>
+                                <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '100px', height: '20px', borderRadius: '6px' }} />
+                              </td>
+                              <td>
+                                <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '110px', height: '18px', borderRadius: '9999px' }} />
+                              </td>
+                              <td>
+                                <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '130px' }} />
+                              </td>
+                              <td style={{ textAlign: 'right' }}>
+                                <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '80px', height: '28px', borderRadius: '6px', marginLeft: 'auto' }} />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="resumes-grid">
+                      {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="resume-skeleton-card">
+                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            <div className="resume-skeleton-box resume-skeleton-avatar" />
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '70%', height: '14px' }} />
+                              <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '50%' }} />
+                            </div>
+                          </div>
+                          <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '90px', height: '18px' }} />
+                          <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '100%', height: '36px', borderRadius: '6px' }} />
+                        </div>
+                      ))}
+                    </div>
+                  )
+                ) : filteredResumes.length === 0 ? (
                   <div className="no-candidates-box">
                     <div className="empty-emoji">📄</div>
                     <h3>No resumes found</h3>
