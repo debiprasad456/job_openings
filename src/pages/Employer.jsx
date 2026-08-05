@@ -523,8 +523,40 @@ export default function Employer() {
     if (!files || files.length === 0) return;
     const fileArray = Array.from(files);
 
+    const duplicates = [];
+    const uniqueFiles = [];
+
+    // Set of existing file names and candidate names in database & current batch
+    const existingFileNames = new Set([
+      ...resumesList.map(r => (r.resumeName || '').toLowerCase().trim()),
+      ...uploadFilesList.map(f => (f.name || '').toLowerCase().trim())
+    ]);
+
+    const existingCandidateNames = new Set([
+      ...resumesList.map(r => (r.name || '').toLowerCase().trim())
+    ]);
+
+    for (const file of fileArray) {
+      const fileNameLower = file.name.toLowerCase().trim();
+      const cleanCandidateName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ').toLowerCase().trim();
+
+      if (existingFileNames.has(fileNameLower) || (cleanCandidateName && existingCandidateNames.has(cleanCandidateName))) {
+        duplicates.push(file.name);
+      } else {
+        existingFileNames.add(fileNameLower);
+        if (cleanCandidateName) existingCandidateNames.add(cleanCandidateName);
+        uniqueFiles.push(file);
+      }
+    }
+
+    if (duplicates.length > 0) {
+      alert(`⚠️ Duplicate Resume(s) Skipped:\n\nThe following ${duplicates.length} file(s) already exist in your candidate database or upload list:\n• ${duplicates.join('\n• ')}`);
+    }
+
+    if (uniqueFiles.length === 0) return;
+
     const converted = await Promise.all(
-      fileArray.map(file => new Promise((resolve) => {
+      uniqueFiles.map(file => new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           resolve({
@@ -653,7 +685,11 @@ export default function Employer() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to upload resumes.');
       
-      showToast(`✅ Successfully uploaded ${payload.length} student resume(s) to database!`);
+      if (data.skippedCount > 0) {
+        showToast(`✅ Uploaded ${data.count} new resume(s). (${data.skippedCount} duplicate file(s) were skipped)`);
+      } else {
+        showToast(`✅ Successfully uploaded ${data.count || payload.length} student resume(s) to database!`);
+      }
       setShowUploadResumeModal(false);
       setUploadFilesList([]);
       refreshResumes();

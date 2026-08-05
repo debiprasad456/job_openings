@@ -97,13 +97,40 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'At least one resume file is required.' });
       }
 
+      // Fetch existing resume records to prevent duplicate uploads
+      const existingUploaded = await resumesCollection.find({}, { projection: { resumeName: 1, name: 1 } }).toArray();
+      const existingApps = await appsCollection.find({ resumeUrl: { $exists: true, $ne: '' } }, { projection: { resumeName: 1, 'personalInfo.name': 1 } }).toArray();
+
+      const existingResumeNames = new Set([
+        ...existingUploaded.map(r => (r.resumeName || '').toLowerCase().trim()),
+        ...existingApps.map(a => (a.resumeName || '').toLowerCase().trim())
+      ]);
+
+      const existingCandidateNames = new Set([
+        ...existingUploaded.map(r => (r.name || '').toLowerCase().trim()),
+        ...existingApps.map(a => (a.personalInfo?.name || '').toLowerCase().trim())
+      ]);
+
       const docsToInsert = [];
+      const skippedDuplicates = [];
+
       for (const item of items) {
         const { name, email, phone, department, resumeUrl, resumeName, notes } = item;
         if (!resumeUrl) continue;
 
+        const fileNameLower = (resumeName || '').toLowerCase().trim();
         const cleanFileName = (resumeName || 'Resume.pdf').replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
         const derivedName = name && name.trim() ? name.trim() : (cleanFileName || 'Uploaded Resume');
+        const candidateNameLower = derivedName.toLowerCase().trim();
+
+        // Prevent duplicate file name or duplicate candidate name
+        if ((fileNameLower && existingResumeNames.has(fileNameLower)) || (candidateNameLower && existingCandidateNames.has(candidateNameLower))) {
+          skippedDuplicates.push(resumeName || derivedName);
+          continue;
+        }
+
+        existingResumeNames.add(fileNameLower);
+        existingCandidateNames.add(candidateNameLower);
 
         docsToInsert.push({
           name: derivedName,
@@ -120,13 +147,17 @@ export default async function handler(req, res) {
       }
 
       if (docsToInsert.length === 0) {
-        return res.status(400).json({ error: 'No valid resume files provided.' });
+        return res.status(400).json({
+          error: `Duplicate Resume Alert: The selected resume file(s) already exist in your database (${skippedDuplicates.join(', ')}). No duplicate entries were created.`
+        });
       }
 
       const result = await resumesCollection.insertMany(docsToInsert);
       return res.status(201).json({
         success: true,
         count: docsToInsert.length,
+        skippedCount: skippedDuplicates.length,
+        skippedFiles: skippedDuplicates,
         insertedIds: result.insertedIds,
       });
     }
