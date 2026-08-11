@@ -57,36 +57,50 @@ export default async function handler(req, res) {
       const uploadedList = await resumesCollection.find({}).toArray();
       const appsList = await appsCollection.find({ resumeUrl: { $exists: true, $ne: '' } }).toArray();
 
-      const mappedUploaded = uploadedList.map(r => ({
-        id: r._id.toString(),
-        name: r.name,
-        email: r.email,
-        phone: r.phone,
-        department: r.department || 'General',
-        resumeUrl: r.resumeUrl,
-        resumeName: r.resumeName || 'Student_Resume.pdf',
-        source: 'uploaded_by_employer',
-        sourceLabel: 'Uploaded by Employer',
-        date: r.uploadedAt || r.createdAt,
-        notes: r.notes || '',
-        canDelete: true,
-      }));
+      const mappedUploaded = uploadedList.map(r => {
+        let dateVal = r.uploadedAt || r.createdAt;
+        if (!dateVal && r._id && typeof r._id.getTimestamp === 'function') {
+          dateVal = r._id.getTimestamp();
+        }
+        return {
+          id: r._id.toString(),
+          name: r.name,
+          email: r.email,
+          phone: r.phone,
+          department: r.department || 'General',
+          resumeUrl: r.resumeUrl,
+          resumeName: r.resumeName || 'Student_Resume.pdf',
+          source: 'uploaded_by_employer',
+          sourceLabel: 'Uploaded by Employer',
+          date: dateVal,
+          uploadedAt: dateVal,
+          notes: r.notes || '',
+          canDelete: true,
+        };
+      });
 
-      const mappedApps = appsList.map(a => ({
-        id: a._id.toString(),
-        name: a.personalInfo?.name || 'Candidate',
-        email: a.personalInfo?.email || '—',
-        phone: a.personalInfo?.phone || '—',
-        department: a.department || a.jobTitle || 'Applied Candidate',
-        jobTitle: a.jobTitle,
-        resumeUrl: a.resumeUrl,
-        resumeName: a.resumeName || 'Resume.pdf',
-        source: 'applied_candidate',
-        sourceLabel: `Applied for ${a.jobTitle}`,
-        date: a.appliedAt,
-        notes: `Application Status: ${a.status}`,
-        canDelete: true,
-      }));
+      const mappedApps = appsList.map(a => {
+        let dateVal = a.appliedAt || a.createdAt;
+        if (!dateVal && a._id && typeof a._id.getTimestamp === 'function') {
+          dateVal = a._id.getTimestamp();
+        }
+        return {
+          id: a._id.toString(),
+          name: a.personalInfo?.name || 'Candidate',
+          email: a.personalInfo?.email || '—',
+          phone: a.personalInfo?.phone || '—',
+          department: a.department || a.jobTitle || 'Applied Candidate',
+          jobTitle: a.jobTitle,
+          resumeUrl: a.resumeUrl,
+          resumeName: a.resumeName || 'Resume.pdf',
+          source: 'applied_candidate',
+          sourceLabel: `Applied for ${a.jobTitle}`,
+          date: dateVal,
+          uploadedAt: dateVal,
+          notes: `Application Status: ${a.status}`,
+          canDelete: true,
+        };
+      });
 
       const allResumes = [...mappedUploaded, ...mappedApps].sort((a, b) => new Date(b.date) - new Date(a.date));
       return res.status(200).json(allResumes);

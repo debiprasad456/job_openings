@@ -16,6 +16,22 @@ function timeAgo(iso) {
   return `${d} days ago`;
 }
 
+/* ── Uploaded Date & Exact Time helper ── */
+function formatUploadDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+}
+
 /* ── Utility: Safe open base64 URL / Blob in a new tab ── */
 function openBase64InNewTab(base64Data) {
   try {
@@ -776,6 +792,24 @@ export default function Employer() {
     return list;
   }, [resumesList, resumeSourceFilter, resumeSearch]);
 
+  /* ── Resumes Pagination State & Calculations ── */
+  const [pageSize, setPageSize] = useState(25);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [resumeSearch, resumeSourceFilter, pageSize]);
+
+  const totalItems = filteredResumes.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = totalItems === 0 ? 0 : (validCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+
+  const paginatedResumes = useMemo(() => {
+    return filteredResumes.slice(startIndex, endIndex);
+  }, [filteredResumes, startIndex, endIndex]);
+
   /* ── Update application status ── */
   const handleStatusChange = async (appId, newStatus) => {
     try {
@@ -1397,6 +1431,56 @@ export default function Employer() {
                     </button>
                   </div>
 
+                  {/* Pagination Controls (Items per page dropdown, range info, refresh, page arrows) */}
+                  <div className="resumes-pagination-controls">
+                    <div className="pagination-dropdown-wrap">
+                      <select
+                        value={pageSize}
+                        onChange={e => setPageSize(Number(e.target.value))}
+                        className="pagination-select"
+                        title="Select items per page"
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={75}>75</option>
+                        <option value={100}>100</option>
+                      </select>
+                      <span className="select-arrow-icon">▾</span>
+                    </div>
+
+                    <span className="pagination-range-text">
+                      {totalItems === 0 ? '0 of 0' : `${startIndex + 1} – ${endIndex} of ${totalItems}`}
+                    </span>
+
+                    <button
+                      className="pagination-refresh-btn"
+                      onClick={refreshResumes}
+                      title="Refresh list from database"
+                    >
+                      🔄
+                    </button>
+
+                    <div className="pagination-arrows">
+                      <button
+                        className="pagination-arrow-btn"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={validCurrentPage <= 1}
+                        title="Previous page"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        className="pagination-arrow-btn"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={validCurrentPage >= totalPages}
+                        title="Next page"
+                      >
+                        ›
+                      </button>
+                    </div>
+                  </div>
+
                   {/* View Switcher Toggle */}
                   <div className="resume-view-toggle">
                     <button
@@ -1430,6 +1514,7 @@ export default function Employer() {
                             <th>Department</th>
                             <th>Source</th>
                             <th>File Attached</th>
+                            <th>Date & Time Uploaded</th>
                             <th style={{ textAlign: 'right' }}>Actions</th>
                           </tr>
                         </thead>
@@ -1459,6 +1544,9 @@ export default function Employer() {
                               </td>
                               <td>
                                 <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '130px' }} />
+                              </td>
+                              <td>
+                                <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '140px' }} />
                               </td>
                               <td style={{ textAlign: 'right' }}>
                                 <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '80px', height: '28px', borderRadius: '6px', marginLeft: 'auto' }} />
@@ -1493,141 +1581,240 @@ export default function Employer() {
                   </div>
                 ) : resumeViewMode === 'list' ? (
                   /* ── LIST / TABLE VIEW ── */
-                  <div className="resumes-table-container animate-fade-in">
-                    <table className="resumes-table">
-                      <thead>
-                        <tr>
-                          <th>Candidate & Student</th>
-                          <th>Contact Info</th>
-                          <th>Department</th>
-                          <th>Source</th>
-                          <th>File Attached</th>
-                          <th style={{ textAlign: 'right' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredResumes.map(r => {
-                          const initials = (r.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-                          return (
-                            <tr key={r.id} className="resume-table-row">
-                              <td>
-                                <div className="resume-table-candidate">
-                                  <div className="resume-avatar-sm">{initials}</div>
-                                  <div>
-                                    <div className="resume-candidate-name">{r.name}</div>
-                                    {r.notes && (
-                                      <div className="resume-table-note" title={r.notes}>
-                                        💡 {r.notes}
-                                      </div>
+                  <>
+                    <div className="resumes-table-container animate-fade-in">
+                      <table className="resumes-table">
+                        <thead>
+                          <tr>
+                            <th>Candidate & Student</th>
+                            <th>Contact Info</th>
+                            <th>Department</th>
+                            <th>Source</th>
+                            <th>File Attached</th>
+                            <th>Date & Time Uploaded</th>
+                            <th style={{ textAlign: 'right' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedResumes.map(r => {
+                            const initials = (r.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                            const uploadDateTime = formatUploadDateTime(r.uploadedAt || r.date);
+                            return (
+                              <tr key={r.id} className="resume-table-row">
+                                <td>
+                                  <div className="resume-table-candidate">
+                                    <div className="resume-avatar-sm">{initials}</div>
+                                    <div>
+                                      <div className="resume-candidate-name">{r.name}</div>
+                                      {r.notes && (
+                                        <div className="resume-table-note" title={r.notes}>
+                                          💡 {r.notes}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td>
+                                  <div className="resume-table-contact">
+                                    <div>📧 {r.email}</div>
+                                    {r.phone && r.phone !== '—' && <div className="sub-phone">📞 {r.phone}</div>}
+                                  </div>
+                                </td>
+                                <td>
+                                  <span className="resume-dept-tag">🎓 {r.department}</span>
+                                </td>
+                                <td>
+                                  <span className={`source-badge ${r.source}`}>
+                                    {r.source === 'uploaded_by_employer' ? '📤 Employer Uploaded' : '📋 Applied Candidate'}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span className="resume-file-name-full" title={r.resumeName}>
+                                    📄 {r.resumeName}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span className="resume-uploaded-at" title={uploadDateTime}>
+                                    🕒 {uploadDateTime}
+                                  </span>
+                                </td>
+                                <td>
+                                  <div className="resume-table-actions">
+                                    <a
+                                      href={r.resumeUrl}
+                                      download={r.resumeName}
+                                      className="btn-action-primary btn-sm"
+                                      style={{ textDecoration: 'none' }}
+                                    >
+                                      ⬇️ Download
+                                    </a>
+                                    {r.canDelete && (
+                                      <button
+                                        className="btn-delete-icon"
+                                        onClick={() => handleDeleteResume(r.id, r.source)}
+                                        title={r.source === 'applied_candidate' ? 'Delete candidate job application' : 'Delete uploaded student resume'}
+                                      >
+                                        🗑️
+                                      </button>
                                     )}
                                   </div>
-                                </div>
-                              </td>
-                              <td>
-                                <div className="resume-table-contact">
-                                  <div>📧 {r.email}</div>
-                                  {r.phone && r.phone !== '—' && <div className="sub-phone">📞 {r.phone}</div>}
-                                </div>
-                              </td>
-                              <td>
-                                <span className="resume-dept-tag">🎓 {r.department}</span>
-                              </td>
-                              <td>
-                                <span className={`source-badge ${r.source}`}>
-                                  {r.source === 'uploaded_by_employer' ? '📤 Employer Uploaded' : '📋 Applied Candidate'}
-                                </span>
-                              </td>
-                              <td>
-                                <span className="resume-file-name-full" title={r.resumeName}>
-                                  📄 {r.resumeName}
-                                </span>
-                              </td>
-                              <td>
-                                <div className="resume-table-actions">
-                                  <a
-                                    href={r.resumeUrl}
-                                    download={r.resumeName}
-                                    className="btn-action-primary btn-sm"
-                                    style={{ textDecoration: 'none' }}
-                                  >
-                                    ⬇️ Download
-                                  </a>
-                                  {r.canDelete && (
-                                    <button
-                                      className="btn-delete-icon"
-                                      onClick={() => handleDeleteResume(r.id, r.source)}
-                                      title={r.source === 'applied_candidate' ? 'Delete candidate job application' : 'Delete uploaded student resume'}
-                                    >
-                                      🗑️
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Bottom Pagination Footer Bar */}
+                    <div className="resumes-pagination-footer">
+                      <span style={{ fontSize: '13px', color: '#64748b' }}>
+                        Showing {totalItems === 0 ? '0' : `${startIndex + 1} to ${endIndex}`} of {totalItems} entries
+                      </span>
+                      <div className="resumes-pagination-controls">
+                        <div className="pagination-dropdown-wrap">
+                          <select
+                            value={pageSize}
+                            onChange={e => setPageSize(Number(e.target.value))}
+                            className="pagination-select"
+                          >
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={75}>75</option>
+                            <option value={100}>100</option>
+                          </select>
+                          <span className="select-arrow-icon">▾</span>
+                        </div>
+                        <div className="pagination-arrows">
+                          <button
+                            className="pagination-arrow-btn"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={validCurrentPage <= 1}
+                            title="Previous page"
+                          >
+                            ‹
+                          </button>
+                          <button
+                            className="pagination-arrow-btn"
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={validCurrentPage >= totalPages}
+                            title="Next page"
+                          >
+                            ›
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   /* ── GRID / CARD VIEW ── */
-                  <div className="resumes-grid">
-                    {filteredResumes.map(r => {
-                      const initials = (r.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-                      return (
-                        <div key={r.id} className="resume-card animate-fade-in">
-                          <div className="resume-card-header">
-                            <div className="resume-avatar">{initials}</div>
-                            <div className="resume-meta-info">
-                              <h3 className="resume-candidate-name">{r.name}</h3>
-                              <div className="resume-sub-detail">
-                                <span>📧 {r.email}</span>
-                                {r.phone && r.phone !== '—' && <span> • 📞 {r.phone}</span>}
+                  <>
+                    <div className="resumes-grid">
+                      {paginatedResumes.map(r => {
+                        const initials = (r.name || 'Student').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                        const uploadDateTime = formatUploadDateTime(r.uploadedAt || r.date);
+                        return (
+                          <div key={r.id} className="resume-card animate-fade-in">
+                            <div className="resume-card-header">
+                              <div className="resume-avatar">{initials}</div>
+                              <div className="resume-meta-info">
+                                <h3 className="resume-candidate-name">{r.name}</h3>
+                                <div className="resume-sub-detail">
+                                  <span>📧 {r.email}</span>
+                                  {r.phone && r.phone !== '—' && <span> • 📞 {r.phone}</span>}
+                                </div>
+                                <div className="resume-dept-tag">
+                                  🎓 {r.department}
+                                </div>
                               </div>
-                              <div className="resume-dept-tag">
-                                🎓 {r.department}
-                              </div>
+                              <span className={`source-badge ${r.source}`}>
+                                {r.source === 'uploaded_by_employer' ? '📤 Employer Uploaded' : '📋 Applied Candidate'}
+                              </span>
                             </div>
-                            <span className={`source-badge ${r.source}`}>
-                              {r.source === 'uploaded_by_employer' ? '📤 Employer Uploaded' : '📋 Applied Candidate'}
-                            </span>
-                          </div>
 
-                          {r.notes && (
-                            <p className="resume-notes-box">
-                              💡 <strong>Notes:</strong> {r.notes}
-                            </p>
-                          )}
+                            {r.notes && (
+                              <p className="resume-notes-box">
+                                💡 <strong>Notes:</strong> {r.notes}
+                              </p>
+                            )}
 
-                          <div className="resume-card-footer">
-                            <span className="resume-file-name" title={r.resumeName}>
-                              📄 {r.resumeName}
-                            </span>
+                            <div className="resume-card-footer">
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span className="resume-file-name" title={r.resumeName}>
+                                  📄 {r.resumeName}
+                                </span>
+                                <span className="resume-uploaded-at" style={{ fontSize: '11px' }} title={uploadDateTime}>
+                                  🕒 {uploadDateTime}
+                                </span>
+                              </div>
 
-                            <div className="resume-actions-group">
-                              <a
-                                href={r.resumeUrl}
-                                download={r.resumeName}
-                                className="btn-action-primary"
-                                style={{ textDecoration: 'none', padding: '6px 14px', fontSize: '13px' }}
-                              >
-                                ⬇️ Download
-                              </a>
-                              {r.canDelete && (
-                                <button
-                                  className="btn-delete-icon"
-                                  onClick={() => handleDeleteResume(r.id, r.source)}
-                                  title={r.source === 'applied_candidate' ? 'Delete candidate job application' : 'Delete uploaded student resume'}
+                              <div className="resume-actions-group">
+                                <a
+                                  href={r.resumeUrl}
+                                  download={r.resumeName}
+                                  className="btn-action-primary"
+                                  style={{ textDecoration: 'none', padding: '6px 14px', fontSize: '13px' }}
                                 >
-                                  🗑️
-                                </button>
-                              )}
+                                  ⬇️ Download
+                                </a>
+                                {r.canDelete && (
+                                  <button
+                                    className="btn-delete-icon"
+                                    onClick={() => handleDeleteResume(r.id, r.source)}
+                                    title={r.source === 'applied_candidate' ? 'Delete candidate job application' : 'Delete uploaded student resume'}
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Bottom Pagination Footer Bar for Grid View */}
+                    <div className="resumes-pagination-footer">
+                      <span style={{ fontSize: '13px', color: '#64748b' }}>
+                        Showing {totalItems === 0 ? '0' : `${startIndex + 1} to ${endIndex}`} of {totalItems} entries
+                      </span>
+                      <div className="resumes-pagination-controls">
+                        <div className="pagination-dropdown-wrap">
+                          <select
+                            value={pageSize}
+                            onChange={e => setPageSize(Number(e.target.value))}
+                            className="pagination-select"
+                          >
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={75}>75</option>
+                            <option value={100}>100</option>
+                          </select>
+                          <span className="select-arrow-icon">▾</span>
                         </div>
-                      );
-                    })}
-                  </div>
+                        <div className="pagination-arrows">
+                          <button
+                            className="pagination-arrow-btn"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={validCurrentPage <= 1}
+                            title="Previous page"
+                          >
+                            ‹
+                          </button>
+                          <button
+                            className="pagination-arrow-btn"
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={validCurrentPage >= totalPages}
+                            title="Next page"
+                          >
+                            ›
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
