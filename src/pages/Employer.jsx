@@ -57,6 +57,28 @@ function openBase64InNewTab(base64Data) {
   }
 }
 
+/* ── Utility: Get Blob URL for PDF preview ── */
+function getResumeBlobUrl(base64Data) {
+  try {
+    if (!base64Data) return '';
+    if (!base64Data.startsWith('data:')) return base64Data;
+    const parts = base64Data.split(';base64,');
+    if (parts.length < 2) return base64Data;
+    const contentType = parts[0].split(':')[1] || 'application/pdf';
+    const raw = window.atob(parts[1]);
+    const rawLength = raw.length;
+    const uInt8Array = new Uint8Array(rawLength);
+    for (let i = 0; i < rawLength; ++i) {
+      uInt8Array[i] = raw.charCodeAt(i);
+    }
+    const blob = new Blob([uInt8Array], { type: contentType });
+    return URL.createObjectURL(blob);
+  } catch (err) {
+    console.error('Error creating blob URL:', err);
+    return base64Data;
+  }
+}
+
 /* ── 18-Category Advanced Candidate Filter Sidebar ── */
 function CandidateFilterSidebar({ dbFilters, setDbFilters, resetDbFilters }) {
   const [openSection, setOpenSection] = useState({
@@ -531,6 +553,7 @@ export default function Employer() {
   const [resumeSourceFilter, setResumeSourceFilter] = useState('all'); // 'all' | 'uploaded' | 'applied'
   const [resumeViewMode, setResumeViewMode] = useState('list'); // 'list' | 'grid'
   const [showUploadResumeModal, setShowUploadResumeModal] = useState(false);
+  const [previewResume, setPreviewResume] = useState(null);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [uploadFilesList, setUploadFilesList] = useState([]); // [{ name, size, type, base64 }]
   const [isDragging, setIsDragging] = useState(false);
@@ -1399,7 +1422,7 @@ export default function Employer() {
                   <span className="search-icon">🔍</span>
                   <input
                     type="text"
-                    placeholder="Search by student name, email, department..."
+                    placeholder="Search by student name, email, resume file..."
                     value={resumeSearch}
                     onChange={e => setResumeSearch(e.target.value)}
                     className="resumes-search-input"
@@ -1511,7 +1534,6 @@ export default function Employer() {
                           <tr>
                             <th>Candidate & Student</th>
                             <th>Contact Info</th>
-                            <th>Department</th>
                             <th>Source</th>
                             <th>File Attached</th>
                             <th>Date & Time Uploaded</th>
@@ -1535,9 +1557,6 @@ export default function Employer() {
                                   <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '90%' }} />
                                   <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '60%' }} />
                                 </div>
-                              </td>
-                              <td>
-                                <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '100px', height: '20px', borderRadius: '6px' }} />
                               </td>
                               <td>
                                 <div className="resume-skeleton-box resume-skeleton-line" style={{ width: '110px', height: '18px', borderRadius: '9999px' }} />
@@ -1588,7 +1607,6 @@ export default function Employer() {
                           <tr>
                             <th>Candidate & Student</th>
                             <th>Contact Info</th>
-                            <th>Department</th>
                             <th>Source</th>
                             <th>File Attached</th>
                             <th>Date & Time Uploaded</th>
@@ -1621,9 +1639,6 @@ export default function Employer() {
                                   </div>
                                 </td>
                                 <td>
-                                  <span className="resume-dept-tag">🎓 {r.department}</span>
-                                </td>
-                                <td>
                                   <span className={`source-badge ${r.source}`}>
                                     {r.source === 'uploaded_by_employer' ? '📤 Employer Uploaded' : '📋 Applied Candidate'}
                                   </span>
@@ -1640,6 +1655,13 @@ export default function Employer() {
                                 </td>
                                 <td>
                                   <div className="resume-table-actions">
+                                    <button
+                                      className="btn-action-preview"
+                                      onClick={() => setPreviewResume(r)}
+                                      title="Preview Resume"
+                                    >
+                                      👁️ Preview
+                                    </button>
                                     <a
                                       href={r.resumeUrl}
                                       download={r.resumeName}
@@ -1750,6 +1772,13 @@ export default function Employer() {
                               </div>
 
                               <div className="resume-actions-group">
+                                <button
+                                  className="btn-action-preview"
+                                  onClick={() => setPreviewResume(r)}
+                                  title="Preview Resume"
+                                >
+                                  👁️ Preview
+                                </button>
                                 <a
                                   href={r.resumeUrl}
                                   download={r.resumeName}
@@ -2314,6 +2343,77 @@ export default function Employer() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Resume Interactive Modal Preview ── */}
+      {previewResume && (
+        <div className="admin-modal-overlay" onClick={() => setPreviewResume(null)}>
+          <div
+            className="admin-modal-content"
+            style={{ maxWidth: '850px', width: '92%', padding: '1.5rem', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>👁️ Resume Preview</span>
+                  <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'normal' }}>({previewResume.name})</span>
+                </h3>
+                <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+                  File: <strong>{previewResume.resumeName}</strong>
+                </p>
+              </div>
+              <button
+                className="admin-modal-close"
+                onClick={() => setPreviewResume(null)}
+                aria-label="Close preview modal"
+                style={{ position: 'static' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ flex: 1, minHeight: '480px', background: '#f8fafc', borderRadius: '8px', overflow: 'hidden', border: '1px solid #cbd5e1', position: 'relative' }}>
+              {previewResume.resumeUrl ? (
+                <iframe
+                  src={getResumeBlobUrl(previewResume.resumeUrl)}
+                  title={`Resume preview for ${previewResume.name}`}
+                  style={{ width: '100%', height: '100%', minHeight: '480px', border: 'none' }}
+                />
+              ) : (
+                <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#64748b' }}>
+                  <span style={{ fontSize: '3rem' }}>📄</span>
+                  <p style={{ marginTop: '1rem', fontSize: '15px' }}>No resume file available for preview.</p>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0' }}>
+              <button
+                className="btn-action-preview"
+                onClick={() => openBase64InNewTab(previewResume.resumeUrl)}
+                style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '13px' }}
+              >
+                🔗 Open in New Tab
+              </button>
+              <a
+                href={previewResume.resumeUrl}
+                download={previewResume.resumeName || 'resume.pdf'}
+                className="btn-action-primary"
+                style={{ textDecoration: 'none', padding: '8px 16px', fontSize: '13px', display: 'inline-flex', alignItems: 'center' }}
+              >
+                ⬇️ Download Resume
+              </a>
+              <button
+                className="btn-action-outline"
+                onClick={() => setPreviewResume(null)}
+                style={{ padding: '8px 16px', fontSize: '13px', cursor: 'pointer' }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

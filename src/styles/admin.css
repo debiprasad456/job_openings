@@ -1787,6 +1787,36 @@
   gap: 4px;
 }
 
+.resume-table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-action-preview {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-action-preview:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0284c7;
+  transform: translateY(-1px);
+}
+
 /* ── Resumes Pagination Controls ── */
 .resumes-pagination-controls {
   display: flex;
