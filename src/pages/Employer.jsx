@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { JOBS } from '../data/jobs';
 import EmployerJobPosting from '../components/EmployerJobPosting';
@@ -479,7 +479,61 @@ function CandidateFilterSidebar({ dbFilters, setDbFilters, resetDbFilters }) {
 
 export default function Employer() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' | 'database' | 'reports' | 'credits'
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const getInitialTab = () => {
+    const validTabs = ['jobs', 'database', 'resumes', 'reports', 'credits'];
+    const urlTab = searchParams.get('tab');
+    if (urlTab && validTabs.includes(urlTab)) {
+      return urlTab;
+    }
+    try {
+      const saved = localStorage.getItem('employer_active_tab');
+      if (saved && validTabs.includes(saved)) {
+        return saved;
+      }
+    } catch {
+      // ignore
+    }
+    return 'jobs';
+  };
+
+  const [activeTab, setActiveTabState] = useState(getInitialTab);
+
+  const setActiveTab = useCallback((tabName) => {
+    setActiveTabState(tabName);
+    try {
+      localStorage.setItem('employer_active_tab', tabName);
+    } catch {
+      // ignore
+    }
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (tabName === 'jobs') {
+        next.delete('tab');
+      } else {
+        next.set('tab', tabName);
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  // Keep state in sync if URL query parameter changes (e.g. browser Back / Forward navigation)
+  useEffect(() => {
+    const validTabs = ['jobs', 'database', 'resumes', 'reports', 'credits'];
+    const urlTab = searchParams.get('tab');
+    if (urlTab && validTabs.includes(urlTab)) {
+      if (urlTab !== activeTab) {
+        setActiveTabState(urlTab);
+        try {
+          localStorage.setItem('employer_active_tab', urlTab);
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }, [searchParams, activeTab]);
+
   const [selectedJob, setSelectedJob] = useState(null); // null = All Jobs list, JobObj = specific job view
   const [selectedStatusTab, setSelectedStatusTab] = useState('All');
   const [selectedApp, setSelectedApp] = useState(null); // Candidate Details Modal
