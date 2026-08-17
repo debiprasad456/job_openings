@@ -254,3 +254,88 @@
   .preview-grid { grid-template-columns: 1fr; }
   .employer-step-card { padding: 1.25rem; }
 }
+
+/* ── Interactive Resume Document Preview & DOCX Viewer Styles ── */
+.resume-preview-dialog {
+  animation: modalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.resume-loading-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3.5px solid #e2e8f0;
+  border-top-color: #168a67;
+  border-radius: 50%;
+  animation: resumeSpin 0.75s linear infinite;
+}
+
+@keyframes resumeSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* DOCX Viewer Customizations */
+.docx-render-container {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #e2e8f0;
+}
+
+.docx-render-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.docx-render-container::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+.docx-render-container::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+
+.docx-render-container .docx-wrapper {
+  background: transparent !important;
+  padding: 10px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 24px !important;
+}
+
+.docx-render-container .docx-wrapper > section.docx {
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 4px !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+}
+
+@media (max-width: 768px) {
+  .resume-preview-dialog {
+    width: 96% !important;
+    height: 94vh !important;
+    max-height: 94vh !important;
+    padding: 1rem !important;
+  }
+  .docx-render-container .docx-wrapper > section.docx {
+    padding: 20px !important;
+    width: 100% !important;
+  }
+}
+

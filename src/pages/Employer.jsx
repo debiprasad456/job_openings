@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { JOBS } from '../data/jobs';
 import EmployerJobPosting from '../components/EmployerJobPosting';
+import ResumePreviewModal from '../components/ResumePreviewModal';
 import '../styles/admin.css';
 
 const STATUSES = ['Applied', 'Under Review', 'Shortlisted', 'Selected', 'Rejected'];
@@ -54,28 +55,6 @@ function openBase64InNewTab(base64Data) {
   } catch (err) {
     console.error('Error opening file:', err);
     window.open(base64Data, '_blank');
-  }
-}
-
-/* ── Utility: Get Blob URL for PDF preview ── */
-function getResumeBlobUrl(base64Data) {
-  try {
-    if (!base64Data) return '';
-    if (!base64Data.startsWith('data:')) return base64Data;
-    const parts = base64Data.split(';base64,');
-    if (parts.length < 2) return base64Data;
-    const contentType = parts[0].split(':')[1] || 'application/pdf';
-    const raw = window.atob(parts[1]);
-    const rawLength = raw.length;
-    const uInt8Array = new Uint8Array(rawLength);
-    for (let i = 0; i < rawLength; ++i) {
-      uInt8Array[i] = raw.charCodeAt(i);
-    }
-    const blob = new Blob([uInt8Array], { type: contentType });
-    return URL.createObjectURL(blob);
-  } catch (err) {
-    console.error('Error creating blob URL:', err);
-    return base64Data;
   }
 }
 
@@ -2183,22 +2162,27 @@ export default function Employer() {
                         <span className="document-large-icon">📄</span>
                       </div>
                       <div className="file-card-details">
-                        <div className="file-card-name" title={selectedApp.resumeName || 'Resume.pdf'}>
-                          📄 {selectedApp.resumeName || 'Resume.pdf'}
+                        <div className="file-card-name" title={selectedApp.resumeName || 'Resume'}>
+                          📄 {selectedApp.resumeName || 'Resume'}
                         </div>
-                        <div className="file-card-meta">Candidate Resume (PDF)</div>
+                        <div className="file-card-meta">Candidate Resume</div>
                       </div>
                       <div className="file-card-actions">
                         <button
+                          type="button"
                           className="btn btn-outline btn-sm"
-                          onClick={() => openBase64InNewTab(selectedApp.resumeUrl)}
+                          onClick={() => setPreviewResume({
+                            name: selectedApp.personalInfo?.fullName || 'Candidate',
+                            resumeName: selectedApp.resumeName || 'Resume',
+                            resumeUrl: selectedApp.resumeUrl
+                          })}
                           style={{ cursor: 'pointer' }}
                         >
-                          👁️ View PDF
+                          👁️ Preview Resume
                         </button>
                         <a
                           href={selectedApp.resumeUrl}
-                          download={selectedApp.resumeName || 'resume.pdf'}
+                          download={selectedApp.resumeName || 'resume'}
                           className="btn btn-primary btn-sm"
                           style={{ textDecoration: 'none' }}
                         >
@@ -2348,75 +2332,10 @@ export default function Employer() {
       )}
 
       {/* ── Resume Interactive Modal Preview ── */}
-      {previewResume && (
-        <div className="admin-modal-overlay" onClick={() => setPreviewResume(null)}>
-          <div
-            className="admin-modal-content"
-            style={{ maxWidth: '850px', width: '92%', padding: '1.5rem', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>👁️ Resume Preview</span>
-                  <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'normal' }}>({previewResume.name})</span>
-                </h3>
-                <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>
-                  File: <strong>{previewResume.resumeName}</strong>
-                </p>
-              </div>
-              <button
-                className="admin-modal-close"
-                onClick={() => setPreviewResume(null)}
-                aria-label="Close preview modal"
-                style={{ position: 'static' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ flex: 1, minHeight: '480px', background: '#f8fafc', borderRadius: '8px', overflow: 'hidden', border: '1px solid #cbd5e1', position: 'relative' }}>
-              {previewResume.resumeUrl ? (
-                <iframe
-                  src={getResumeBlobUrl(previewResume.resumeUrl)}
-                  title={`Resume preview for ${previewResume.name}`}
-                  style={{ width: '100%', height: '100%', minHeight: '480px', border: 'none' }}
-                />
-              ) : (
-                <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#64748b' }}>
-                  <span style={{ fontSize: '3rem' }}>📄</span>
-                  <p style={{ marginTop: '1rem', fontSize: '15px' }}>No resume file available for preview.</p>
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0' }}>
-              <button
-                className="btn-action-preview"
-                onClick={() => openBase64InNewTab(previewResume.resumeUrl)}
-                style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '13px' }}
-              >
-                🔗 Open in New Tab
-              </button>
-              <a
-                href={previewResume.resumeUrl}
-                download={previewResume.resumeName || 'resume.pdf'}
-                className="btn-action-primary"
-                style={{ textDecoration: 'none', padding: '8px 16px', fontSize: '13px', display: 'inline-flex', alignItems: 'center' }}
-              >
-                ⬇️ Download Resume
-              </a>
-              <button
-                className="btn-action-outline"
-                onClick={() => setPreviewResume(null)}
-                style={{ padding: '8px 16px', fontSize: '13px', cursor: 'pointer' }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ResumePreviewModal
+        previewResume={previewResume}
+        onClose={() => setPreviewResume(null)}
+      />
 
     </div>
   );
