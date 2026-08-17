@@ -88,7 +88,13 @@ export default function ResumePreviewModal({ previewResume, onClose }) {
   const fileType = detectFileType(resumeUrl, resumeName);
 
   useEffect(() => {
-    if (!previewResume || !resumeUrl) {
+    if (!previewResume) {
+      return;
+    }
+
+    if (!resumeUrl) {
+      setLoading(true);
+      setError(null);
       return;
     }
 

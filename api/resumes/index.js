@@ -52,10 +52,76 @@ export default async function handler(req, res) {
     const resumesCollection = db.collection('resumes');
     const appsCollection = db.collection('applications');
 
-    // GET — Fetch combined resumes (Applications + Employer Uploads)
+    // GET — Fetch single resume file by ID OR Fetch list of candidate metadata (Lazy Loaded)
     if (req.method === 'GET') {
-      const uploadedList = await resumesCollection.find({}).toArray();
-      const appsList = await appsCollection.find({ resumeUrl: { $exists: true, $ne: '' } }).toArray();
+      const resumeId = req.query?.id || req.query?.resumeId;
+      const source = req.query?.source;
+
+      // 1. Single Resume On-Demand Fetching
+      if (resumeId) {
+        let objId = null;
+        try {
+          if (ObjectId.isValid(resumeId)) {
+            objId = new ObjectId(resumeId);
+          }
+        } catch {
+          objId = null;
+        }
+
+        const query = objId ? { _id: objId } : { id: resumeId };
+
+        if (source === 'applied_candidate') {
+          const appDoc = await appsCollection.findOne(query, { projection: { resumeUrl: 1, resumeName: 1, personalInfo: 1, jobTitle: 1 } });
+          if (!appDoc || !appDoc.resumeUrl) {
+            return res.status(404).json({ error: 'Resume not found for this application.' });
+          }
+          return res.status(200).json({
+            id: appDoc._id.toString(),
+            name: appDoc.personalInfo?.name || 'Candidate',
+            resumeUrl: appDoc.resumeUrl,
+            resumeName: appDoc.resumeName || 'Resume.pdf',
+          });
+        } else if (source === 'uploaded_by_employer') {
+          const resumeDoc = await resumesCollection.findOne(query, { projection: { resumeUrl: 1, resumeName: 1, name: 1 } });
+          if (!resumeDoc || !resumeDoc.resumeUrl) {
+            return res.status(404).json({ error: 'Uploaded resume document not found.' });
+          }
+          return res.status(200).json({
+            id: resumeDoc._id.toString(),
+            name: resumeDoc.name || 'Uploaded Resume',
+            resumeUrl: resumeDoc.resumeUrl,
+            resumeName: resumeDoc.resumeName || 'Resume.pdf',
+          });
+        } else {
+          // If source not specified, search resumesCollection first, then appsCollection
+          const resumeDoc = await resumesCollection.findOne(query, { projection: { resumeUrl: 1, resumeName: 1, name: 1 } });
+          if (resumeDoc && resumeDoc.resumeUrl) {
+            return res.status(200).json({
+              id: resumeDoc._id.toString(),
+              name: resumeDoc.name || 'Uploaded Resume',
+              resumeUrl: resumeDoc.resumeUrl,
+              resumeName: resumeDoc.resumeName || 'Resume.pdf',
+            });
+          }
+          const appDoc = await appsCollection.findOne(query, { projection: { resumeUrl: 1, resumeName: 1, personalInfo: 1 } });
+          if (appDoc && appDoc.resumeUrl) {
+            return res.status(200).json({
+              id: appDoc._id.toString(),
+              name: appDoc.personalInfo?.name || 'Candidate',
+              resumeUrl: appDoc.resumeUrl,
+              resumeName: appDoc.resumeName || 'Resume.pdf',
+            });
+          }
+          return res.status(404).json({ error: 'Resume file not found.' });
+        }
+      }
+
+      // 2. Full Metadata List Fetching (Excludes massive resumeUrl base64 strings)
+      const uploadedList = await resumesCollection.find({}, { projection: { resumeUrl: 0 } }).toArray();
+      const appsList = await appsCollection.find(
+        { resumeUrl: { $exists: true, $ne: '' } },
+        { projection: { resumeUrl: 0 } }
+      ).toArray();
 
       const mappedUploaded = uploadedList.map(r => {
         let dateVal = r.uploadedAt || r.createdAt;
@@ -68,7 +134,8 @@ export default async function handler(req, res) {
           email: r.email,
           phone: r.phone,
           department: r.department || 'General',
-          resumeUrl: r.resumeUrl,
+          resumeUrl: '', // excluded for performance, fetched on demand
+          hasResume: true,
           resumeName: r.resumeName || 'Student_Resume.pdf',
           source: 'uploaded_by_employer',
           sourceLabel: 'Uploaded by Employer',
@@ -91,7 +158,8 @@ export default async function handler(req, res) {
           phone: a.personalInfo?.phone || '—',
           department: a.department || a.jobTitle || 'Applied Candidate',
           jobTitle: a.jobTitle,
-          resumeUrl: a.resumeUrl,
+          resumeUrl: '', // excluded for performance, fetched on demand
+          hasResume: true,
           resumeName: a.resumeName || 'Resume.pdf',
           source: 'applied_candidate',
           sourceLabel: `Applied for ${a.jobTitle}`,

@@ -533,6 +533,7 @@ export default function Employer() {
   const [resumeViewMode, setResumeViewMode] = useState('list'); // 'list' | 'grid'
   const [showUploadResumeModal, setShowUploadResumeModal] = useState(false);
   const [previewResume, setPreviewResume] = useState(null);
+  const [downloadingResumeId, setDownloadingResumeId] = useState(null);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [uploadFilesList, setUploadFilesList] = useState([]); // [{ name, size, type, base64 }]
   const [isDragging, setIsDragging] = useState(false);
@@ -713,6 +714,88 @@ export default function Employer() {
       alert(err.message);
     } finally {
       setUploadingResume(false);
+    }
+  };
+
+  /* ── On-Demand Resume File Fetcher ── */
+  const fetchResumeFile = useCallback(async (resumeId, source) => {
+    if (!resumeId) throw new Error('Missing resume ID');
+    const token = localStorage.getItem('ds_token');
+    const res = await fetch(`/api/resumes?id=${encodeURIComponent(resumeId)}&source=${encodeURIComponent(source || '')}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to fetch resume file.');
+    }
+    const data = await res.json();
+    return data.resumeUrl;
+  }, []);
+
+  /* ── Smart Preview Resume Handler (Lazy Loaded) ── */
+  const handlePreviewResume = async (r) => {
+    if (!r) return;
+    if (r.resumeUrl) {
+      setPreviewResume(r);
+      return;
+    }
+
+    // Open preview modal immediately in loading state
+    setPreviewResume({
+      ...r,
+      resumeUrl: '',
+    });
+
+    try {
+      const fileUrl = await fetchResumeFile(r.id, r.source);
+      if (!fileUrl) throw new Error('Resume file content is empty.');
+      // Update preview modal state
+      setPreviewResume(prev => (prev && prev.id === r.id ? { ...prev, resumeUrl: fileUrl } : prev));
+      // Cache in active resumes list so subsequent opens are instant
+      setResumesList(prev => prev.map(item => item.id === r.id ? { ...item, resumeUrl: fileUrl } : item));
+    } catch (err) {
+      console.error('Error fetching resume for preview:', err);
+      alert('Could not load resume document: ' + err.message);
+      setPreviewResume(null);
+    }
+  };
+
+  /* ── Smart Download Resume Handler (Lazy Loaded) ── */
+  const handleDownloadResume = async (r, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!r) return;
+
+    const triggerBrowserDownload = (url, fileName) => {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName || 'resume.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+
+    if (r.resumeUrl) {
+      triggerBrowserDownload(r.resumeUrl, r.resumeName);
+      return;
+    }
+
+    setDownloadingResumeId(r.id);
+    try {
+      const fileUrl = await fetchResumeFile(r.id, r.source);
+      if (!fileUrl) throw new Error('Resume file content is empty.');
+      // Cache in active resumes list
+      setResumesList(prev => prev.map(item => item.id === r.id ? { ...item, resumeUrl: fileUrl } : item));
+      triggerBrowserDownload(fileUrl, r.resumeName);
+    } catch (err) {
+      console.error('Error downloading resume:', err);
+      alert('Could not download resume: ' + err.message);
+    } finally {
+      setDownloadingResumeId(null);
     }
   };
 
@@ -1635,20 +1718,22 @@ export default function Employer() {
                                 <td>
                                   <div className="resume-table-actions">
                                     <button
+                                      type="button"
                                       className="btn-action-preview"
-                                      onClick={() => setPreviewResume(r)}
+                                      onClick={() => handlePreviewResume(r)}
                                       title="Preview Resume"
                                     >
                                       👁️ Preview
                                     </button>
-                                    <a
-                                      href={r.resumeUrl}
-                                      download={r.resumeName}
+                                    <button
+                                      type="button"
+                                      onClick={(e) => handleDownloadResume(r, e)}
+                                      disabled={downloadingResumeId === r.id}
                                       className="btn-action-primary btn-sm"
-                                      style={{ textDecoration: 'none' }}
+                                      style={{ border: 'none', cursor: downloadingResumeId === r.id ? 'wait' : 'pointer' }}
                                     >
-                                      ⬇️ Download
-                                    </a>
+                                      {downloadingResumeId === r.id ? '⏳ Fetching...' : '⬇️ Download'}
+                                    </button>
                                     {r.canDelete && (
                                       <button
                                         className="btn-delete-icon"
@@ -1752,20 +1837,22 @@ export default function Employer() {
 
                               <div className="resume-actions-group">
                                 <button
+                                  type="button"
                                   className="btn-action-preview"
-                                  onClick={() => setPreviewResume(r)}
+                                  onClick={() => handlePreviewResume(r)}
                                   title="Preview Resume"
                                 >
                                   👁️ Preview
                                 </button>
-                                <a
-                                  href={r.resumeUrl}
-                                  download={r.resumeName}
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDownloadResume(r, e)}
+                                  disabled={downloadingResumeId === r.id}
                                   className="btn-action-primary"
-                                  style={{ textDecoration: 'none', padding: '6px 14px', fontSize: '13px' }}
+                                  style={{ padding: '6px 14px', fontSize: '13px', border: 'none', cursor: downloadingResumeId === r.id ? 'wait' : 'pointer' }}
                                 >
-                                  ⬇️ Download
-                                </a>
+                                  {downloadingResumeId === r.id ? '⏳ Fetching...' : '⬇️ Download'}
+                                </button>
                                 {r.canDelete && (
                                   <button
                                     className="btn-delete-icon"
@@ -2171,23 +2258,32 @@ export default function Employer() {
                         <button
                           type="button"
                           className="btn btn-outline btn-sm"
-                          onClick={() => setPreviewResume({
-                            name: selectedApp.personalInfo?.fullName || 'Candidate',
+                          onClick={() => handlePreviewResume({
+                            id: selectedApp._id || selectedApp.id,
+                            name: selectedApp.personalInfo?.fullName || selectedApp.name || 'Candidate',
                             resumeName: selectedApp.resumeName || 'Resume',
-                            resumeUrl: selectedApp.resumeUrl
+                            resumeUrl: selectedApp.resumeUrl,
+                            source: 'applied_candidate',
                           })}
                           style={{ cursor: 'pointer' }}
                         >
                           👁️ Preview Resume
                         </button>
-                        <a
-                          href={selectedApp.resumeUrl}
-                          download={selectedApp.resumeName || 'resume'}
+                        <button
+                          type="button"
                           className="btn btn-primary btn-sm"
-                          style={{ textDecoration: 'none' }}
+                          onClick={(e) => handleDownloadResume({
+                            id: selectedApp._id || selectedApp.id,
+                            name: selectedApp.personalInfo?.fullName || selectedApp.name || 'Candidate',
+                            resumeName: selectedApp.resumeName || 'Resume',
+                            resumeUrl: selectedApp.resumeUrl,
+                            source: 'applied_candidate',
+                          }, e)}
+                          disabled={downloadingResumeId === (selectedApp._id || selectedApp.id)}
+                          style={{ cursor: downloadingResumeId === (selectedApp._id || selectedApp.id) ? 'wait' : 'pointer', border: 'none' }}
                         >
-                          ⬇️ Download
-                        </a>
+                          {downloadingResumeId === (selectedApp._id || selectedApp.id) ? '⏳ Fetching...' : '⬇️ Download'}
+                        </button>
                       </div>
                     </div>
                   )}
