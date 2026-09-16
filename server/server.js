@@ -7,9 +7,14 @@ import dns from 'dns';
 // Force use of IPv4 DNS servers to bypass ISP (e.g., Reliance Jio) IPv6 SRV resolution bugs
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+
 // Parse .env manually to load MONGODB_URI and JWT_SECRET
 try {
-  const envPath = path.join(process.cwd(), '.env');
+  const envPath = fs.existsSync(path.join(__dirname, '.env'))
+    ? path.join(__dirname, '.env')
+    : path.join(process.cwd(), '.env');
+
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf-8');
     envContent.split('\n').forEach(line => {
@@ -27,7 +32,7 @@ try {
         process.env[key] = val;
       }
     });
-    console.log('Successfully loaded environment variables from .env');
+    console.log(`Successfully loaded environment variables from ${envPath}`);
   } else {
     console.warn('.env file not found');
   }
@@ -64,10 +69,10 @@ const server = http.createServer(async (req, res) => {
 
   // Map URL pathname to local file inside api/
   const relativePath = pathname.startsWith('/') ? pathname.slice(1) : pathname;
-  let filePath = path.join(process.cwd(), relativePath + '.js');
+  let filePath = path.join(__dirname, relativePath + '.js');
 
   if (!fs.existsSync(filePath)) {
-    filePath = path.join(process.cwd(), relativePath, 'index.js');
+    filePath = path.join(__dirname, relativePath, 'index.js');
   }
 
   if (!fs.existsSync(filePath)) {
