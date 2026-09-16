@@ -34,3 +34,7 @@ pnpm-debug.log*
 .env.*.local
 server/.env
 server/.env.*
+
+# Vercel CLI cache
+.vercel
+
