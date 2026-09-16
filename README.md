@@ -1,62 +1,51 @@
-# Job Openings Portal
+# Job Openings Portal (Full-Stack Vercel App)
 
-This project has been restructured into two dedicated directories:
-- **`client/`**: React frontend built with Vite
-- **`server/`**: Node.js backend API and MongoDB database handlers
+A modern full-stack job openings portal built for deployment on **Vercel** with a React (Vite) frontend, Node.js serverless functions, and MongoDB Atlas.
 
 ---
 
-## Directory Structure
+## Architecture
 
 ```text
 job openings portal/
-├── client/                  # Frontend (React + Vite)
-│   ├── public/              # Static assets & icons
-│   ├── src/                 # React components, pages, context, and styles
-│   ├── index.html           # HTML entry point
-│   ├── vite.config.js       # Vite configuration & API proxy (/api -> localhost:3000)
-│   └── package.json         # Frontend dependencies & scripts
+├── client/                     # Frontend Application (React + Vite)
+│   ├── public/                 # Static assets, icons, logos
+│   ├── src/                    # React components, pages, hooks, CSS
+│   ├── index.html              # HTML entry point
+│   ├── vite.config.js          # Vite config (proxies /api -> localhost:3000)
+│   └── package.json            # Frontend-only dependencies
 │
-├── server/                  # Backend & Database (Node.js)
-│   ├── api/                 # API endpoint route handlers (auth, jobs, resumes, etc.)
-│   ├── lib/                 # Database connection (db.js) & CORS helpers
-│   ├── server.js            # Node HTTP server routing requests to handlers
-│   ├── .env                 # Environment variables (MONGODB_URI, JWT_SECRET, SMTP)
-│   └── package.json         # Backend dependencies & scripts
+├── api/                        # Backend Serverless Functions (Vercel native)
+│   ├── admin/                  # Admin application management
+│   ├── applications/           # Application submission & tracking
+│   ├── auth/                   # Register, login, OTP reset
+│   ├── employer/               # Employer portal routes
+│   ├── jobs/                   # Job listings & publishing
+│   └── resumes/                # Resume download & preview
 │
-├── package.json             # Root helper scripts
-└── README.md                # Project documentation
+├── lib/                        # Shared Backend Utilities & Database
+│   ├── db.js                   # MongoDB connection pool (cached client)
+│   └── cors-helper.js          # CORS and response headers
+│
+├── server.js                   # Local Development HTTP Server (port 3000)
+├── vercel.json                 # Vercel SPA routing and /api rewrites
+├── package.json                # Root orchestration & serverless dependencies
+└── .env                        # Local development environment variables
 ```
 
 ---
 
-## Quick Start Guide
+## Local Development
 
 ### 1. Install Dependencies
-
-You can install both client and server dependencies with a single command from the project root:
-
+From the repository root:
 ```bash
-npm run install:all
-```
-
-Or install them individually:
-```bash
-# In client folder:
-cd client
-npm install
-
-# In server folder:
-cd ../server
 npm install
 ```
+*(NPM workspaces will automatically install both root backend dependencies and `client` frontend dependencies)*
 
----
-
-### 2. Configure Environment Variables
-
-Ensure `server/.env` contains your database and secret credentials:
-
+### 2. Configure Local `.env`
+Ensure `.env` exists in the root directory:
 ```env
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
@@ -67,44 +56,41 @@ SMTP_PASS=your_app_password
 SMTP_FROM="Diverse Solutions" <your_email@gmail.com>
 ```
 
----
+### 3. Run Locally
 
-### 3. Run the Project
+Open two terminals:
 
-Run both the server and client in separate terminals:
-
-#### Terminal 1: Backend Server
-From the root directory:
+#### Terminal 1: Backend Server (Local Port 3000)
 ```bash
 npm run server
 ```
-*(Or navigate to `cd server` and run `npm start` or `npm run dev`)*
-- Runs at: `http://localhost:3000`
 
-#### Terminal 2: Frontend Client
-From the root directory:
+#### Terminal 2: Frontend Client (Local Port 5173)
 ```bash
 npm run client
 ```
-*(Or navigate to `cd client` and run `npm run dev`)*
-- Runs at: `http://localhost:5173`
+
+Open `http://localhost:5173` in your browser. All API requests (`/api/*`) are proxied automatically to `http://localhost:3000`.
 
 ---
 
-## Available NPM Scripts
+## Deploying to Vercel
 
-### Root Level
-- `npm run client`: Starts the Vite dev server for `client/`
-- `npm run server`: Starts the backend server for `server/`
-- `npm run build`: Builds the production bundle in `client/`
-- `npm run install:all`: Installs dependencies in both `client` and `server`
+1. **Root Directory Setting in Vercel**: Keep it as default `./` (the repository root).
+2. **Push to GitHub**:
+   ```bash
+   git add .
+   git commit -m "deploy: configure native vercel full-stack app"
+   git push origin main
+   ```
+3. **Set Environment Variables in Vercel Dashboard**:
+   Go to **Project Settings &rarr; Environment Variables** and add:
+   - `MONGODB_URI`
+   - `JWT_SECRET`
+   - `SMTP_HOST`
+   - `SMTP_PORT`
+   - `SMTP_USER`
+   - `SMTP_PASS`
+   - `SMTP_FROM`
 
-### Inside `client/`
-- `npm run dev`: Starts Vite local dev server (`http://localhost:5173`)
-- `npm run build`: Builds production React bundle to `client/dist`
-- `npm run preview`: Previews production build locally
-- `npm run lint`: Runs oxlint
-
-### Inside `server/`
-- `npm start`: Starts Node.js backend server (`http://localhost:3000`)
-- `npm run dev`: Starts Node.js backend with watch mode (`node --watch server.js`)
+Vercel will automatically build the client SPA and deploy all `/api` endpoints as serverless functions.
